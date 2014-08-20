@@ -40,7 +40,7 @@ import android.widget.Toast;
  *
  * @author Nicolas Gramlich
  * @since 13:58:48 - 19.07.2010
- */
+ */ 
 public class MainFile extends SimpleBaseGameActivity {
 	// ===========================================================
 	// Constants
