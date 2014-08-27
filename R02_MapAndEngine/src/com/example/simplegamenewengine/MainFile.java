@@ -2,8 +2,15 @@ package com.example.simplegamenewengine;
 
 
 
+import java.io.IOException;
+
 import org.andengine.engine.camera.BoundCamera;
+import org.andengine.engine.camera.Camera;
+import org.andengine.engine.camera.hud.controls.BaseOnScreenControl;
+import org.andengine.engine.camera.hud.controls.BaseOnScreenControl.IOnScreenControlListener;
+import org.andengine.engine.camera.hud.controls.DigitalOnScreenControl;
 import org.andengine.engine.handler.IUpdateHandler;
+import org.andengine.engine.handler.physics.PhysicsHandler;
 import org.andengine.engine.options.EngineOptions;
 import org.andengine.engine.options.ScreenOrientation;
 import org.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
@@ -24,9 +31,13 @@ import org.andengine.extension.tmx.TMXTile;
 import org.andengine.extension.tmx.TMXTileProperty;
 import org.andengine.extension.tmx.TMXTiledMap;
 import org.andengine.extension.tmx.util.exception.TMXLoadException;
+import org.andengine.opengl.texture.ITexture;
 import org.andengine.opengl.texture.TextureOptions;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlas;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlasTextureRegionFactory;
+import org.andengine.opengl.texture.bitmap.AssetBitmapTexture;
+import org.andengine.opengl.texture.region.ITextureRegion;
+import org.andengine.opengl.texture.region.TextureRegionFactory;
 import org.andengine.opengl.texture.region.TiledTextureRegion;
 import org.andengine.ui.activity.SimpleBaseGameActivity;
 import org.andengine.util.Constants;
@@ -35,7 +46,7 @@ import org.andengine.util.debug.Debug;
 import android.widget.Toast;
 
 /**
- * (c) 2010 Nicolas Gramlich
+ * (c) 2010 Nicolas Gramlic h
  * (c) 2011 Zynga
  *
  * @author Nicolas Gramlich
@@ -59,6 +70,13 @@ public class MainFile extends SimpleBaseGameActivity {
 	private TiledTextureRegion mPlayerTextureRegion;
 	private TMXTiledMap mTMXTiledMap;
 	protected int mCactusCount;
+	
+	private ITexture mOnScreenControlBaseTexture;
+	private ITextureRegion mOnScreenControlBaseTextureRegion;
+	private ITexture mOnScreenControlKnobTexture;
+	private ITextureRegion mOnScreenControlKnobTextureRegion;
+
+	private DigitalOnScreenControl mDigitalOnScreenControl;
 
 	// ===========================================================
 	// Constructors
@@ -88,6 +106,24 @@ public class MainFile extends SimpleBaseGameActivity {
 		this.mBitmapTextureAtlas = new BitmapTextureAtlas(this.getTextureManager(), 256, 256, TextureOptions.DEFAULT);
 		this.mPlayerTextureRegion = BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(this.mBitmapTextureAtlas, this, "sword_player.png", 0, 0, 3, 4);
 
+		try {
+			this.mOnScreenControlBaseTexture = new AssetBitmapTexture(this.getTextureManager(), this.getAssets(), "gfx/onscreen_control_base.png", TextureOptions.BILINEAR);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		this.mOnScreenControlBaseTextureRegion = TextureRegionFactory.extractFromTexture(this.mOnScreenControlBaseTexture);
+		this.mOnScreenControlBaseTexture.load();
+
+		try {
+			this.mOnScreenControlKnobTexture = new AssetBitmapTexture(this.getTextureManager(), this.getAssets(), "gfx/onscreen_control_knob.png", TextureOptions.BILINEAR);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		this.mOnScreenControlKnobTextureRegion = TextureRegionFactory.extractFromTexture(this.mOnScreenControlKnobTexture);
+		this.mOnScreenControlKnobTexture.load();
+		
 		this.mBitmapTextureAtlas.load();
 	}
 
@@ -134,42 +170,59 @@ public class MainFile extends SimpleBaseGameActivity {
 		final AnimatedSprite player = new AnimatedSprite(centerX, centerY, this.mPlayerTextureRegion, this.getVertexBufferObjectManager());
 		this.mBoundChaseCamera.setChaseEntity(player);
 
-		final Path path = new Path(5).to(0, 160).to(0, 500).to(600, 500).to(600, 160).to(0, 160);
+		final PhysicsHandler physicsHandler = new PhysicsHandler(player);
+		player.registerUpdateHandler(physicsHandler);
 
-		player.registerEntityModifier(new LoopEntityModifier(new PathModifier(30, path, null, new IPathModifierListener() {
-			@Override
-			public void onPathStarted(final PathModifier pPathModifier, final IEntity pEntity) {
-
-			}
+		IOnScreenControlListener screenControlListener = new IOnScreenControlListener() {
 
 			@Override
-			public void onPathWaypointStarted(final PathModifier pPathModifier, final IEntity pEntity, final int pWaypointIndex) {
-				switch(pWaypointIndex) {
-					case 0:
-						player.animate(new long[]{200, 200, 200}, 0, 2, true);
-						break;
-					case 1:
-						player.animate(new long[]{200, 200, 200}, 6, 8, true);
-						break;
-					case 2: // up
-						player.animate(new long[]{200, 200, 200}, 9, 11, true);
-						break;
-					case 3:
-						player.animate(new long[]{200, 200, 200}, 3, 5, true);
-						break;
-				}
+			public void onControlChange(
+					BaseOnScreenControl pBaseOnScreenControl, float pValueX,
+					float pValueY) {
+				physicsHandler.setVelocity(pValueX * 100, pValueY * 100);
 			}
-
-			@Override
-			public void onPathWaypointFinished(final PathModifier pPathModifier, final IEntity pEntity, final int pWaypointIndex) {
-
-			}
-
-			@Override
-			public void onPathFinished(final PathModifier pPathModifier, final IEntity pEntity) {
-
-			}
-		})));
+			
+		};
+		
+		this.mDigitalOnScreenControl = new DigitalOnScreenControl(0, CAMERA_HEIGHT-this.mOnScreenControlBaseTexture.getHeight(), (Camera) this.mBoundChaseCamera, this.mOnScreenControlBaseTextureRegion, this.mOnScreenControlKnobTextureRegion, 0.1f, this.getVertexBufferObjectManager(), screenControlListener
+		);
+		
+//		final Path path = new Path(5).to(0, 160).to(0, 500).to(600, 500).to(600, 160).to(0, 160);
+//
+//		player.registerEntityModifier(new LoopEntityModifier(new PathModifier(30, path, null, new IPathModifierListener() {
+//			@Override
+//			public void onPathStarted(final PathModifier pPathModifier, final IEntity pEntity) {
+//
+//			}
+//
+//			@Override
+//			public void onPathWaypointStarted(final PathModifier pPathModifier, final IEntity pEntity, final int pWaypointIndex) {
+//				switch(pWaypointIndex) {
+//					case 0:
+//						player.animate(new long[]{200, 200, 200}, 0, 2, true);
+//						break;
+//					case 1:
+//						player.animate(new long[]{200, 200, 200}, 6, 8, true);
+//						break;
+//					case 2: // up
+//						player.animate(new long[]{200, 200, 200}, 9, 11, true);
+//						break;
+//					case 3:
+//						player.animate(new long[]{200, 200, 200}, 3, 5, true);
+//						break;
+//				}
+//			}
+//
+//			@Override
+//			public void onPathWaypointFinished(final PathModifier pPathModifier, final IEntity pEntity, final int pWaypointIndex) {
+//
+//			}
+//
+//			@Override
+//			public void onPathFinished(final PathModifier pPathModifier, final IEntity pEntity) {
+//
+//			}
+//		})));
 
 		/* Now we are going to create a rectangle that will  always highlight the tile below the feet of the pEntity. */
 		final Rectangle currentTileRectangle = new Rectangle(0, 0, this.mTMXTiledMap.getTileWidth(), this.mTMXTiledMap.getTileHeight(), this.getVertexBufferObjectManager());
@@ -194,7 +247,7 @@ public class MainFile extends SimpleBaseGameActivity {
 			}
 		});
 		scene.attachChild(player);
-
+		scene.setChildScene(this.mDigitalOnScreenControl);
 		return scene;
 	}
 
