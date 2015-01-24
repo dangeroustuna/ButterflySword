@@ -258,9 +258,21 @@ void addBlock(float c_x, float c_y, float dim_x, float dim_y, int index)
 	drawWall(c_x,c_y,dim_x,dim_y);
 	blocks[index] = Block(CVector3(c_x,c_y,0),CVector3(dim_x,dim_y,0),player_size);
 }
+
+bool flashing = false;
+int timer = 10;
+
 void RenderScene() 
 {
-	
+	// Timer thing for Room 2 flash
+	if (flashing){
+		timer -= 1;
+		if (timer <= 0){
+			timer = 10;
+			flashing = false;
+		}
+	}
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	// Clear The Screen And The Depth Buffer
 	glClearColor(0.5,0.5,0.5,0);
 	glLoadIdentity();									// Reset The matrix
@@ -348,23 +360,27 @@ void RenderScene()
 	// ROOOOM 2 //
 
 
-	//drawObject(-13.5,-0.52,1,1,RED_BUTTON);
-	//Block buttonBlock = Block(CVector3(-13.5,-0.52,0),CVector3(1,1,0),player_size);
+	drawObject(-13.5,-0.52,1,1,RED_BUTTON);
+	Block buttonBlock = Block(CVector3(-13.5,-0.52,0),CVector3(1,1,0),player_size);
 
-	//if (collision_times_with_button < 3 && !flashing){
-	//	drawWall(-15.5,-5.5,13.0,11);
-	//}
+	if (collision_times_with_button < 3 && !flashing){
+		drawWall(-15.5,-5.5,13.0,11);
+	}
 
-	//if (buttonBlock.hasCollision(g_Camera) {
-	//	if(!touchingButton){
-	//		flashing = true;
-	//		touchingButton = true;
-	//		collision_times_with_button++;
+	if (buttonBlock.hasCollision(g_Camera)) {
+		if(!touchingButton){
+			flashing = true;
+			touchingButton = true;
+			collision_times_with_button++;
 
-	//	}
-	//	else{
-	//		
-	//}
+		}
+		else{}
+	}
+	else {
+		if (touchingButton){
+			touchingButton = false;
+		}
+	}
 	
 	
 	
