@@ -125,13 +125,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="block.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Init.cpp" />
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="block.h" />
     <ClInclude Include="Glext.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="models.h" />

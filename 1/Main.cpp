@@ -40,7 +40,7 @@ void Init(HWND hWnd)
 	g_hWnd = hWnd;										// Assign the window handle to a global window handle
 	GetClientRect(g_hWnd, &g_rRect);					// Assign the windows rectangle to a global RECT
 	InitializeOpenGL(g_rRect.right, g_rRect.bottom);	// Init OpenGL with the global rect
-	g_Camera.PositionCamera(0, 0, 6,   0, 0, 0,   0, 1, 0);
+	g_Camera.PositionCamera(0, 0, 40,   0, 0, 0,   0, 1, 0);
 
 	glActiveTextureARB		= (PFNGLACTIVETEXTUREARBPROC)		wglGetProcAddress("glActiveTextureARB");
 	glMultiTexCoord2fARB	= (PFNGLMULTITEXCOORD2FARBPROC)		wglGetProcAddress("glMultiTexCoord2fARB");
@@ -154,11 +154,71 @@ WPARAM MainLoop()
 	return(msg.wParam);									// Return from the program
 }
 
+int findMin(float f, float b, float l, float r)
+{
+	float m = min(min(f,b),min(l,r));
+	if (m == f) return bTOP;
+	if (m == b) return bBOTTOM;
+	if (m == l) return bLEFT;
+	else return bRIGHT;
+}
 
+CCamera checkCollision(CCamera camera, Block block){
+	// This code checks if any of the blocks have a collision with the camera
+	// If there is a collision, we need to find the side of the rectangle that is closed to the camera
+	// Then reposition the camera to get a sliding effect.
+	CVector3 point = camera.View();
+	CVector3 eye = camera.Position();
+	CCamera newCamera = CCamera();
 
+	if (block.hasCollision(camera))				
+	{
+		// relative to block
+		float leftdist = abs(block.center.x  - block.dimension.x/2 - block.offset - point.x);
+		float rightdist = abs(block.center.x + block.dimension.x/2 + block.offset - point.x);
+		float bottomdist = abs(block.center.y - block.dimension.y/2 - block.offset - point.y);
+		float topdist = abs(block.center.y + block.dimension.y/2 + block.offset - point.y);
+		int minID = findMin(topdist,bottomdist,leftdist,rightdist); // find the side enum value
+
+		if (minID == bBOTTOM) 
+		{
+			float dy = block.center.y - block.dimension.y/2 - block.offset - point.y;
+			point.y += dy; eye.y += dy;
+			newCamera.PositionCamera(eye.x,eye.y,eye.z,point.x,point.y,point.z,0,1,0);
+			return newCamera;
+		}
+		if (minID == bTOP) 
+		{
+			float dy = block.center.y + block.dimension.y/2 + block.offset - point.y;
+			point.y += dy; eye.y += dy;
+			newCamera.PositionCamera(eye.x,eye.y,eye.z,point.x,point.y,point.z,0,1,0);
+			return newCamera;
+		}
+		if (minID == bLEFT) 
+		{
+			float dx = block.center.x - block.dimension.x/2 - block.offset - point.x;
+			point.x += dx; eye.x += dx;
+			newCamera.PositionCamera(eye.x,eye.y,eye.z,point.x,point.y,point.z,0,1,0);
+			return newCamera;
+		}
+		if (minID == bRIGHT) 
+		{
+			float dx = block.center.x + block.dimension.x/2 + block.offset - point.x;
+			point.x += dx; eye.x += dx;
+			newCamera.PositionCamera(eye.x,eye.y,eye.z,point.x,point.y,point.z,0,1,0);
+			return newCamera;
+		}
+
+	}
+	return camera;
+}
+
+Block blocks[100];
+int blocks_size=0;
 
 void RenderScene() 
 {
+	float player_size = 1.0f;
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	// Clear The Screen And The Depth Buffer
 	glClearColor(0.5,0.5,0.5,0);
 	glLoadIdentity();									// Reset The matrix
@@ -166,6 +226,14 @@ void RenderScene()
 	gluLookAt(g_Camera.m_vPosition.x, g_Camera.m_vPosition.y, g_Camera.m_vPosition.z,	
 			  g_Camera.m_vView.x,	  g_Camera.m_vView.y,     g_Camera.m_vView.z,	
 			  g_Camera.m_vUpVector.x, g_Camera.m_vUpVector.y, g_Camera.m_vUpVector.z);
+
+	blocks[0] = Block(CVector3(-2,0,0),CVector3(2,2,0),player_size);
+	blocks_size = 1;
+	for(int i=0;i<blocks_size;i++){
+		if(blocks[i].hasCollision(g_Camera)){
+			g_Camera = checkCollision(g_Camera,blocks[i]);
+		}
+	}
 
 
 	//init_blocks();
@@ -258,24 +326,24 @@ void RenderScene()
 	glTranslatef(g_Camera.m_vView.x, g_Camera.m_vView.y, g_Camera.m_vView.z);
 
 	glBegin(GL_QUADS);
-	float size = 0.1;
+	
 	glTexCoord2f (0.0f, 1.0f);
 	//glMultiTexCoord2fARB(GL_TEXTURE1_ARB, 0.0f, 1.0f);
-	glVertex3f(-size, size, 0);
+	glVertex3f(-player_size, player_size, 0);
 
 	glTexCoord2f(0.0f, 0.0f);
 	//glMultiTexCoord2fARB(GL_TEXTURE1_ARB, 0.0f, 0.0f);
-	glVertex3f(-size, -size, 0);
+	glVertex3f(-player_size, -player_size, 0);
 
 	// Display the bottom right vertice with the textures for both textures
 	glTexCoord2f(1.0f, 0.0f);
 	//glMultiTexCoord2fARB(GL_TEXTURE1_ARB, 1.0f, 0.0f);
-	glVertex3f(size, -size, 0);
+	glVertex3f(player_size, -player_size, 0);
 
 	// Display the top right vertice with the textures for both textures
 	glTexCoord2f(1.0f, 1.0f);
 	//glMultiTexCoord2fARB(GL_TEXTURE1_ARB, 1.0f, 1.0f);
-	glVertex3f(size, size, 0);
+	glVertex3f(player_size, player_size, 0);
 
 	// Stop drawing 
 	glEnd();											

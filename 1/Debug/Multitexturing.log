@@ -1,15 +1,14 @@
-﻿Build started 2015-01-24 11:59:02 AM.
-     1>Project "C:\Users\Jimmy\Documents\1\Multitexturing.vcxproj" on node 2 (build target(s)).
+﻿Build started 2015-01-24 1:14:51 PM.
+     1>Project "C:\Users\Jimmy\Desktop\ButterflySword\1\Multitexturing.vcxproj" on node 2 (build target(s)).
      1>InitializeBuildStatus:
-         Touching ".\Debug\Multitexturing.unsuccessfulbuild".
+         Creating ".\Debug\Multitexturing.unsuccessfulbuild" because "AlwaysCreate" was specified.
        ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _WINDOWS /D _VC80_UPGRADE=0x0710 /D _MBCS /Gm- /EHsc /RTC1 /MTd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo".\Debug/" /Fd".\Debug/vc100.pdb" /Gd /TP /analyze- /errorReport:prompt block.cpp
-         block.cpp
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _WINDOWS /D _VC80_UPGRADE=0x0710 /D _MBCS /Gm- /EHsc /RTC1 /MTd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo".\Debug/" /Fd".\Debug/vc100.pdb" /Gd /TP /analyze- /errorReport:prompt Main.cpp
+         Main.cpp
        ManifestResourceCompile:
          All outputs are up-to-date.
        Link:
          C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:".\Debug/Multitexturing.exe" /INCREMENTAL /NOLOGO odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:".\Debug\Multitexturing.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:".\Debug/Multitexturing.pdb" /SUBSYSTEM:WINDOWS /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:".\Debug\Multitexturing.lib" /MACHINE:X86 .\Debug\Multitexturing.exe.embed.manifest.res
-         .\Debug/block.obj
          .\Debug/Camera.obj
          .\Debug/Init.obj
          .\Debug/Main.obj /MACHINE:I386 
@@ -18,12 +17,12 @@
          All outputs are up-to-date.
        LinkEmbedManifest:
          All outputs are up-to-date.
-         Multitexturing.vcxproj -> C:\Users\Jimmy\Documents\1\.\Debug\Multitexturing.exe
+         Multitexturing.vcxproj -> C:\Users\Jimmy\Desktop\ButterflySword\1\.\Debug\Multitexturing.exe
        FinalizeBuildStatus:
          Deleting file ".\Debug\Multitexturing.unsuccessfulbuild".
          Touching ".\Debug\Multitexturing.lastbuildstate".
-     1>Done Building Project "C:\Users\Jimmy\Documents\1\Multitexturing.vcxproj" (build target(s)).
+     1>Done Building Project "C:\Users\Jimmy\Desktop\ButterflySword\1\Multitexturing.vcxproj" (build target(s)).
 
 Build succeeded.
 
-Time Elapsed 00:00:00.67
+Time Elapsed 00:00:00.87

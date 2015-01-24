@@ -86,7 +86,13 @@ public:
 
 	float x, y, z;						
 };
+///////////////////////////////////////////////////////////////////////////////////////////////////
+enum { bTOP , bBOTTOM , bLEFT, bRIGHT };
 
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 // This is our camera class
 class CCamera {
 
@@ -128,6 +134,36 @@ public:
 	}
 };
 
+
+class Block{
+
+public:
+	Block(){};
+	Block(CVector3 c, CVector3 d, float off){
+		center = c;
+		dimension = d;
+		offset = off;
+	}
+	CVector3 getCenter()    {	return center;	  }
+	CVector3 getDimension() {	return dimension; }
+	//		
+
+	bool hasCollision(CCamera camera)
+	{
+	float hWidth = dimension.x/2 + offset;
+	float hLength = dimension.y/2 + offset;
+	CVector3 point = camera.View();
+
+	if ((abs(point.x - center.x) < hWidth) && (abs(point.y - center.y) < hLength)) 
+		return true;
+	return false;
+	}
+
+	CVector3 center;				 // will just use x and z
+	CVector3 dimension;			     // will just use x = width, z = length
+	float offset;
+
+};
 // This is our MAIN() for windows
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hprev, PSTR cmdline, int ishow);
 
