@@ -20,7 +20,7 @@
 #include "glext.h"										// * IMPORTANT * Must include for extentions
 #include <assert.h>
 
-#define kSpeed	0.02f
+#define kSpeed	0.2f
 
 bool  g_bFullScreen = true;								// Set full screen as default
 HWND  g_hWnd;											// This is the handle for the window
@@ -35,12 +35,18 @@ UINT g_Texture[MAX_TEXTURES];							// This will reference to our texture data s
 PFNGLMULTITEXCOORD2FARBPROC		glMultiTexCoord2fARB	= NULL;
 PFNGLACTIVETEXTUREARBPROC		glActiveTextureARB		= NULL;
 
+enum{RED_BUTTON,PLAYER,A,B,C,WALL};
+bool touchingButton = false;
+int collision_times_with_button = 0;
+
+
+
 void Init(HWND hWnd)
 {
 	g_hWnd = hWnd;										// Assign the window handle to a global window handle
 	GetClientRect(g_hWnd, &g_rRect);					// Assign the windows rectangle to a global RECT
 	InitializeOpenGL(g_rRect.right, g_rRect.bottom);	// Init OpenGL with the global rect
-	g_Camera.PositionCamera(0, 0, 40,   0, 0, 0,   0, 1, 0);
+	g_Camera.PositionCamera(-5, -5, 40,   -5, -5, 0,   0, 1, 0);
 
 	glActiveTextureARB		= (PFNGLACTIVETEXTUREARBPROC)		wglGetProcAddress("glActiveTextureARB");
 	glMultiTexCoord2fARB	= (PFNGLMULTITEXCOORD2FARBPROC)		wglGetProcAddress("glMultiTexCoord2fARB");
@@ -54,11 +60,14 @@ void Init(HWND hWnd)
 	// There will be 4 textures loaded to demonstrate the effect.  We use our own CreateTexture to
 	// load the bitmaps and save them in OpenGL texture memory.
 
-	CreateTexture(g_Texture[0], "level0.bmp");				// Load the brick wall into our first texture index
+
+//enum{RED_BUTTON,PLAYER,A,B,C,WALL};
+	CreateTexture(g_Texture[0], "Red_button.bmp");				// Load the brick wall into our first texture index
 	CreateTexture(g_Texture[1], "LightMap.bmp");			// Load the light map into our second texture index
 	CreateTexture(g_Texture[2], "Cove.bmp");				// Load the background picture into our third texture index
 	CreateTexture(g_Texture[3], "Fog.bmp");					// Load the fog into our fourth texture index
 	CreateTexture(g_Texture[4], "steel.bmp");	
+	CreateTexture(g_Texture[5], "wall.bmp");	
 
 /////// * /////////// * /////////// * NEW * /////// * /////////// * /////////// *
 
@@ -213,12 +222,45 @@ CCamera checkCollision(CCamera camera, Block block){
 	return camera;
 }
 
+void drawObject(float c_x,float c_y,float dim_x,float dim_y, int textureID){
+	glBindTexture(GL_TEXTURE_2D,  g_Texture[textureID]);
+
+	static float wrap = 0;
+	glPushMatrix();
+	glTranslatef(c_x, c_y, 0);
+	glBegin(GL_QUADS);
+
+		glTexCoord2f(0.0f, 1.0f);
+		glVertex3f(-dim_x/2, dim_y/2, 0);
+		glTexCoord2f( 0.0f, 0.0f);
+		glVertex3f(-dim_x/2, -dim_y/2, 0);
+		glTexCoord2f(1.0f, 0.0f);
+		glVertex3f(dim_x/2, -dim_y/2, 0);
+		glTexCoord2f(1.0f, 1.0f);
+		glVertex3f(dim_x/2, dim_y/2, 0);
+
+	// Stop drawing QUADS
+	glEnd();
+	glPopMatrix();
+}
+
 Block blocks[100];
 int blocks_size=0;
+void drawWall(float c_x,float c_y,float dim_x,float dim_y){
+	drawObject(c_x,c_y,dim_x,dim_y,WALL);
+}
 
+
+
+float player_size = 1.0f;
+void addBlock(float c_x, float c_y, float dim_x, float dim_y, int index)
+{
+	drawWall(c_x,c_y,dim_x,dim_y);
+	blocks[index] = Block(CVector3(c_x,c_y,0),CVector3(dim_x,dim_y,0),player_size);
+}
 void RenderScene() 
 {
-	float player_size = 1.0f;
+	
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	// Clear The Screen And The Depth Buffer
 	glClearColor(0.5,0.5,0.5,0);
 	glLoadIdentity();									// Reset The matrix
@@ -227,92 +269,46 @@ void RenderScene()
 			  g_Camera.m_vView.x,	  g_Camera.m_vView.y,     g_Camera.m_vView.z,	
 			  g_Camera.m_vUpVector.x, g_Camera.m_vUpVector.y, g_Camera.m_vUpVector.z);
 
-	blocks[0] = Block(CVector3(-2,0,0),CVector3(2,2,0),player_size);
-	blocks_size = 1;
+
+	/////////////////////// WALLLLLLLS //////////////////////////////////////////////
+	addBlock(-21,-0.5,42,1,0);
+	addBlock(-8,-10.5,16,1,1);
+	addBlock(-27,-10.5,16,1,2);
+	addBlock(-40,-10.5,4,1,3);
+	addBlock(-19.5,-22.5,17,1,4);
+	addBlock(-32,-22.5,2,1,5);
+	addBlock(-21,-35.5,42,1,6);
+	addBlock(-0.5,-18,1,36,7);
+	addBlock(-9.5,-1,1,2,8);
+	addBlock(-9.5,-8,1,6,9);
+	addBlock(-21.5,-2,1,2,10);
+	addBlock(-21.5,-8,1,4,11);
+	addBlock(-11.5,-12,1,4,12);
+	addBlock(-11.5,-21.5,1,8,13);
+	addBlock(-11.5,-32,1,8,14);
+	addBlock(-24.5,-17,1,12,15);
+	addBlock(-33.5,-8,1,16,16);
+	addBlock(-33.5,-27.5,1,15,17);
+	addBlock(-41.5,-18,1,36,18);
+	blocks_size = 19;
+	
+	//////////////////////// WALLLLS ///////////////////////////////////////////////////
 	for(int i=0;i<blocks_size;i++){
 		if(blocks[i].hasCollision(g_Camera)){
 			g_Camera = checkCollision(g_Camera,blocks[i]);
 		}
 	}
 
-
-	//init_blocks();
-
-	// Set the second texture ID to be active, then bind our light map texture to this ID.
-	//glActiveTextureARB(GL_TEXTURE1_ARB);
-	//glEnable(GL_TEXTURE_2D);
-	//glBindTexture(GL_TEXTURE_2D,  g_Texture[1]);
-	/////////////////////////////////////////////////////////////////////////////////////
-	//
-	//     LEVEL 0
-	//
-	//////////////////////////////////////////////////////////////////////////////////////
-
-	glBindTexture(GL_TEXTURE_2D,  g_Texture[0]);
+	//drawWall((-9.0 - 22)/2.0 , -5.5,22-9,11-0);
 	
-	glPushMatrix();
+	//drawWall((-31.5 - 22.5)/2.0 - 0.5, -5.5, 12,10);
+	//drawWall((-11.5-24.5)/2.0,(-22.5 - 10.5)/2.0,13,12);
+	//drawWall(-6,-23,11,25);
+	//drawWall(-22.5,-29,22,13);
+	//drawWall(-29,(-22.5 - 10.5)/2.0,9,12);
+	//drawWall(-37.5,-23,8,25);
+	//drawWall(-37.5,-5.5,8,10);
 
-	glTranslatef(2, 0, 0);
-
-	glBegin(GL_QUADS);
-	
-	glTexCoord2f(0.0f, 1.0f);
-	//glMultiTexCoord2fARB(GL_TEXTURE1_ARB, 0.0f, 1.0f);
-	glVertex3f(-1, 1, 0);
-
-	glTexCoord2f(0.0f, 0.0f);
-	//glMultiTexCoord2fARB(GL_TEXTURE1_ARB, 0.0f, 0.0f);
-	glVertex3f(-1, -1, 0);
-
-	// Display the bottom right vertice with the textures for both textures
-	glTexCoord2f(1.0f, 0.0f);
-	//glMultiTexCoord2fARB(GL_TEXTURE1_ARB, 1.0f, 0.0f);
-	glVertex3f(1, -1, 0);
-
-	// Display the top right vertice with the textures for both textures
-	glTexCoord2f(1.0f, 1.0f);
-	//glMultiTexCoord2fARB(GL_TEXTURE1_ARB, 1.0f, 1.0f);
-	glVertex3f(1, 1, 0);
-
-	// Stop drawing 
-	glEnd();											
-	glPopMatrix();
-
-	/////////////////////////////////////////////////////////////////////////////////////
-	//
-	//     LEVEL 1
-	//
-	//////////////////////////////////////////////////////////////////////////////////////
-	
-	glBindTexture(GL_TEXTURE_2D,  g_Texture[2]);
-
-	static float wrap = 0;
-	glPushMatrix();
-	// Move the QUAD over to the right of the screen
-	glTranslatef(-2, 0, 0);
-
-	// Display a multitextured quad texture to the screen
-	glBegin(GL_QUADS);
-
-		glTexCoord2f(0.0f, 1.0f);
-		glVertex3f(-1, 1, 0);
-
-		// Display the bottom left vertice with each texture's coodinates
-		glTexCoord2f( 0.0f, 0.0f);
-		glVertex3f(-1, -1, 0);
-
-		// Display the bottom right vertice with each texture's coodinates
-		glTexCoord2f(1.0f, 0.0f);
-		glVertex3f(1, -1, 0);
-
-		// Display the top right vertice with each texture's coodinates
-		glTexCoord2f(1.0f, 1.0f);
-		glVertex3f(1, 1, 0);
-
-	// Stop drawing QUADS
-	glEnd();
-	glPopMatrix();
-	
 	//////////////////////////////////////////////////////////////////
 	//
 	//  Player
@@ -320,7 +316,7 @@ void RenderScene()
 	//////////////////////////////////////////////////////////////////////
 	//glEnable(GL_TEXTURE_2D);
 	
-	glBindTexture(GL_TEXTURE_2D,  g_Texture[4]);
+	glBindTexture(GL_TEXTURE_2D,  g_Texture[PLAYER]);
 	glPushMatrix();
 
 	glTranslatef(g_Camera.m_vView.x, g_Camera.m_vView.y, g_Camera.m_vView.z);
@@ -348,6 +344,31 @@ void RenderScene()
 	// Stop drawing 
 	glEnd();											
 	glPopMatrix();
+	
+	// ROOOOM 2 //
+
+
+	//drawObject(-13.5,-0.52,1,1,RED_BUTTON);
+	//Block buttonBlock = Block(CVector3(-13.5,-0.52,0),CVector3(1,1,0),player_size);
+
+	//if (collision_times_with_button < 3 && !flashing){
+	//	drawWall(-15.5,-5.5,13.0,11);
+	//}
+
+	//if (buttonBlock.hasCollision(g_Camera) {
+	//	if(!touchingButton){
+	//		flashing = true;
+	//		touchingButton = true;
+	//		collision_times_with_button++;
+
+	//	}
+	//	else{
+	//		
+	//}
+	
+	
+	
+
 
 	SwapBuffers(g_hDC);
 	assert(glGetError() == GL_NO_ERROR);							
@@ -394,55 +415,3 @@ LRESULT CALLBACK WinProc(HWND hWnd,UINT uMsg, WPARAM wParam, LPARAM lParam)
     return lRet;										// Return by default
 }
 
-/////////////////////////////////////////////////////////////////////////////////
-//
-// * QUICK NOTES * 
-//
-// That is it!  I bet you thought there was more to this didn't you?  Well, there
-// is actually.  We just skimmed the surface.  You will want to be able to
-// fade certain textures, and have the background picture be more bright,
-// or vice versa.  You will want to use the EXT_texture_env_combine extension.
-// More on this extension in a future tutorial.  This extension will also
-// allow you to do bump mapping extremely fast.
-//
-// Let's review:
-//
-// 1) Before we do anything, we need to create some function pointers to hold the
-// extensions that are read in.  In order to use these data types, we need to have
-// the prototypes either copied in to our program, or just include glext.h.
-// you can just stick this file into your include\GL\ directory, where all your other
-// opengl include files are: C:\Program Files\Microsoft Visual Studio\VC98\Include\
-//
-// PFNGLMULTITEXCOORD2FARBPROC		glMultiTexCoord2fARB	= NULL;
-// PFNGLACTIVETEXTUREARBPROC		glActiveTextureARB		= NULL;
-//
-// 2) Now we need to read in and store the function pointers, then check if we got
-// valid addresses for these functions.
-//
-// glActiveTextureARB	= (PFNGLACTIVETEXTUREARBPROC)		wglGetProcAddress("glActiveTextureARB");
-// glMultiTexCoord2fARB	= (PFNGLMULTITEXCOORD2FARBPROC)		wglGetProcAddress("glMultiTexCoord2fARB");
-//
-// 3) When we are about to render, we need to to assign our texture to a multitexture ID.
-// That way, we can pass in that ID to specify which texture we are giving texture coordinates too.
-//
-// glActiveTextureARB(GL_TEXTURE0_ARB);
-// glEnable(GL_TEXTURE_2D);
-// glBindTexture(GL_TEXTURE_2D,  g_Texture[0]);
-//
-// 4) Now, when we want to give texture coordinates for our texture, we simply pass in the
-// texture ID we want and it's texture coordinates to glMultiTexCoord2fARB().
-//
-// glMultiTexCoord2fARB(GL_TEXTURE0_ARB, 0.0f, 1.0f);
-// glMultiTexCoord2fARB(GL_TEXTURE1_ARB, 0.0f - wrap, 1.0f);
-// glVertex3f(-1, 1, 0);
-//
-// That's it!  Let us know at GameTutorials.com if this tutorial helps you.  We would love to
-// see what you come up with.
-// 
-//
-// Ben Humphrey (DigiBen)
-// Game Programmer
-// DigiBen@GameTutorials.com
-// ©2000-2005 GameTutorials
-// © 2000-2005 GameTutorials
-//

@@ -1,4 +1,4 @@
-﻿Build started 2015-01-24 1:14:51 PM.
+﻿Build started 2015-01-24 2:58:27 PM.
      1>Project "C:\Users\Jimmy\Desktop\ButterflySword\1\Multitexturing.vcxproj" on node 2 (build target(s)).
      1>InitializeBuildStatus:
          Creating ".\Debug\Multitexturing.unsuccessfulbuild" because "AlwaysCreate" was specified.
@@ -25,4 +25,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:00.87
+Time Elapsed 00:00:00.86
