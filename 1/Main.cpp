@@ -40,11 +40,11 @@ UINT g_Texture[MAX_TEXTURES];							// This will reference to our texture data s
 PFNGLMULTITEXCOORD2FARBPROC		glMultiTexCoord2fARB	= NULL;
 PFNGLACTIVETEXTUREARBPROC		glActiveTextureARB		= NULL;
 
-enum{RED_BUTTON,PLAYER,SAWTRAP,LARGE_SCROLL,MINI_SCROLL,WALL,DOOR,TREASURE,FIRE,MONSTER,ROOM_SIX_SCROLL,ONE_TWO_THREE,ROOM_SEVEN_FLOOR,ROOM_SEVEN_HINT};
+enum{RED_BUTTON,PLAYER,SAWTRAP,LARGE_SCROLL,MINI_SCROLL,WALL,DOOR,TREASURE,FIRE,MONSTER,ROOM_SIX_SCROLL,ONE_TWO_THREE,ROOM_SEVEN_FLOOR,ROOM_SEVEN_HINT,STAR};
 bool touchingButton;
 int collision_times_with_button;
 bool isDoorOpened[10];
-bool isShawdowShow[10];
+bool isShadowShow[10];
 float sawOffsetY1;
 float sawOffsetY2;
 float sawSpeed1;
@@ -99,6 +99,7 @@ void Init(HWND hWnd)
 	CreateTexture(g_Texture[ONE_TWO_THREE],"one_two_three.bmp"); // JIMMY 
 	CreateTexture(g_Texture[ROOM_SEVEN_FLOOR], "Room_Seven_Floor.bmp");
 	CreateTexture(g_Texture[ROOM_SEVEN_HINT], "Room_Seven_Hint.bmp");
+	CreateTexture(g_Texture[STAR],"star.bmp");
 
 	CreateTexture(g_Texture[41], "one.bmp");	
 	CreateTexture(g_Texture[42], "two.bmp");	
@@ -149,6 +150,7 @@ void reset(){
 		}
 		for (int i = 3; i<10;i++){
         isDoorOpened[i] = false;
+		isShadowShow[i] = true;
 		}
 	
 		monster_pos = CVector3(-6,-31,0);
@@ -156,7 +158,7 @@ void reset(){
 		for(int i=0;i<15;i++){
 			blocks[60+i] = Block(CVector3(1,1,0),CVector3(1,1,0),1.0);
 		}
-		monsterTimer=120;
+		monsterTimer=180;
 }	
 
 void CheckForMovement(){
@@ -268,7 +270,7 @@ CCamera checkCollision(CCamera camera, Block block){
 	CVector3 point = camera.View();
 	CVector3 eye = camera.Position();
 	CCamera newCamera = CCamera();
-	return camera;
+	//return camera;
 	if (block.hasCollision(camera))				
 	{
 		// relative to block
@@ -564,6 +566,10 @@ void RenderScene()
     
 	
 	//Room 3//
+	if (g_Camera.m_vView.x < -22 && g_Camera.m_vView.y > -6){
+		isShadowShow[3] = false;
+	}
+
 	sawOffsetY1+=sawSpeed1;
 	if(sawOffsetY1>=3||sawOffsetY1<=-3){
 		sawSpeed1 *= -1;
@@ -586,7 +592,9 @@ void RenderScene()
 	//drawWall((-31.5 - 22.5)/2.0 - 0.5, -5.5, 12,10,WALL);
 
 	    // ROOOOM 4
-
+	if (g_Camera.m_vView.x < -16 && g_Camera.m_vView.x > -19 && g_Camera.m_vView.y < -11 && g_Camera.m_vView.y > -12){
+		isShadowShow[4] = false;
+	}
     
     drawObject(-14.5,-21,1,2,MINI_SCROLL);
     Block scroll = Block(CVector3(-14.5,-21,0),CVector3(1,2,0),player_size);
@@ -620,6 +628,9 @@ void RenderScene()
     //drawWall((-11.5-24.5)/2.0,(-22.5 - 10.5)/2.0,13,12);
     
     // ROOM 5 //
+	if (g_Camera.m_vView.x < -10 && g_Camera.m_vView.x > -11 && g_Camera.m_vView.y < -19 && g_Camera.m_vView.y > -22){
+		isShadowShow[5] = false;
+	}
 	if (isDoorOpened[5]){
 		addBlock(monster_pos.x,monster_pos.y,2,2,49,MONSTER);
 		if (monsterTimer>0){					//use the timer to give the player a head start
@@ -668,7 +679,9 @@ void RenderScene()
 	}
 		////// JIMMY //////
 	//// ROOOOM 6 ///////////
-
+	if (g_Camera.m_vView.x < -12 && g_Camera.m_vView.x > -13 && g_Camera.m_vView.y < -25 && g_Camera.m_vView.y > -28){
+		isShadowShow[6] = false;
+	}
 	drawObject(-14,-34,2,1,ROOM_SIX_SCROLL);
     Block room_six_scroll = Block(CVector3(-14,-34,0),CVector3(2,1,0),player_size);
     bool drawRoomSixScroll = false;
@@ -700,6 +713,9 @@ void RenderScene()
 
 
 	//Room 7//
+	if (g_Camera.m_vView.x < -28 && g_Camera.m_vView.x > -31 && g_Camera.m_vView.y < -21 && g_Camera.m_vView.y > -22){
+		isShadowShow[7] = false;
+	}
 	drawObject(-27,-13.4,1,2,MINI_SCROLL);
     Block room_seven_scroll = Block(CVector3(-27,-13.4,0),CVector3(1,2,0),player_size);
     bool drawRoomSevenScroll = false;
@@ -731,6 +747,30 @@ void RenderScene()
         isDoorOpened[7] = true;
     }
 
+	//DAVID//
+	//room of Clear//
+	drawObject(-37.5,-5.5,1,1,STAR);
+    Block star = Block(CVector3(-37.5,-5.5,0),CVector3(1,1,0),player_size);
+    bool drawClear = false;
+    if(room_seven_scroll.hasCollision(g_Camera)){
+        drawClear = true;
+    }
+
+	// Shadows //
+	if(isShadowShow[3])
+		drawWall((-31.5 - 22.5)/2.0 - 0.5, -5.5, 12,10,WALL); //room 3
+	if(isShadowShow[4])
+		drawWall((-11.5-20.5)/2.0,(-22.5 - 10.5)/2.0,9,12,WALL);
+	if(isShadowShow[5])
+		drawWall(-6,-23,11,25,WALL);
+	if(isShadowShow[6])
+		drawWall(-22.5,-29,22,13,WALL);
+	if(isShadowShow[7])
+		drawWall(-27,(-22.5 - 10.5)/2.0,13,12,WALL);
+	if(isShadowShow[8])
+		drawWall(-37.5,-23,8,25,WALL);
+	if(isShadowShow[9])
+		drawWall(-37.5,-5.5,8,10,WALL);
 	/// Scrolls///
 	if (drawLargeScroll)
         drawObject(-15.5,-21,20,20,LARGE_SCROLL);
@@ -751,6 +791,7 @@ void RenderScene()
 	if(isGameOver){
 		drawGameOver();
 	}
+	drawHud();
 	SwapBuffers(g_hDC);
 	assert(glGetError() == GL_NO_ERROR);							
 }

@@ -3,7 +3,7 @@
 
 
 #define EDGE_WIDTH 50
-enum{GAMEOVER};
+enum{GAMEOVER,HUD};
 bool isTextureLoaded = false;
 UINT hud_Texture[MAX_TEXTURES];							// This will reference to our texture data stored with OpenGL UINT is an unsigned int (only positive numbers)
 
@@ -49,6 +49,7 @@ void OrthoMode(int left, int top, int right, int bottom)
 
 void LoadHudTexture(){
 	CreateTexture(hud_Texture[GAMEOVER], "Gameover.bmp");
+	CreateTexture(hud_Texture[HUD],"hud.bmp");
 	isTextureLoaded = true;
 
 }
@@ -108,6 +109,59 @@ void drawGameOver(){
 
 		// Display the bottom right point of the 2D image
 		glTexCoord2f(1.0f, 0.0f);	glVertex2f(SCREEN_WIDTH, SCREEN_HEIGHT);
+
+		// Display the top right point of the 2D image
+		glTexCoord2f(1.0f, 1.0f);	glVertex2f(SCREEN_WIDTH, 0);
+
+	// Stop drawing 
+	glEnd();	
+	
+
+
+	glDisable(GL_BLEND);
+		
+
+
+	// Let's set our mode back to perspective 3D mode.  None of this archaic 2D stuff :)
+	PerspectiveMode();
+	
+
+
+}
+void drawHud(){
+	OrthoMode(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+
+	glColor4f(1,1,1,0);
+	// Disable depth testing (MUST do this to make it work)
+	glDisable(GL_DEPTH_TEST);
+
+	// Select our desired depth testing and turn on blending
+	glBlendFunc(GL_DST_COLOR,GL_ZERO);
+	glDisable(GL_BLEND);											
+
+	
+	// Bind the mask texture to our new 2D quad
+//	if(!isTextureLoaded){
+		LoadHudTexture();
+	//}
+	glBindTexture(GL_TEXTURE_2D,  hud_Texture[HUD]);
+	// Display a 2D quad with the scope/cross hair mask
+	glBegin(GL_QUADS);
+	
+		// Notice that when we are in ortho mode, we use glVertex2f() to pass
+		// in screen coordinates, not vertices.  This makes it incredibly easy
+		// to put up 2D interface art.  It's just like doing 2D graphics.
+		// The texture coordinate stay the same regardless.
+
+		// Display the top left point of the 2D image
+		glTexCoord2f(0.0f, 1.0f);	glVertex2f(0, 0);
+
+		// Display the bottom left point of the 2D image
+		glTexCoord2f(0.0f, 0.0f);	glVertex2f(0, SCREEN_HEIGHT*0.1);
+
+		// Display the bottom right point of the 2D image
+		glTexCoord2f(1.0f, 0.0f);	glVertex2f(SCREEN_WIDTH, SCREEN_HEIGHT*0.1);
 
 		// Display the top right point of the 2D image
 		glTexCoord2f(1.0f, 1.0f);	glVertex2f(SCREEN_WIDTH, 0);
