@@ -40,7 +40,7 @@ UINT g_Texture[MAX_TEXTURES];							// This will reference to our texture data s
 PFNGLMULTITEXCOORD2FARBPROC		glMultiTexCoord2fARB	= NULL;
 PFNGLACTIVETEXTUREARBPROC		glActiveTextureARB		= NULL;
 
-enum{RED_BUTTON,PLAYER,SAWTRAP,LARGE_SCROLL,MINI_SCROLL,WALL,DOOR,TREASURE};
+enum{RED_BUTTON,PLAYER,SAWTRAP,LARGE_SCROLL,MINI_SCROLL,WALL,DOOR,TREASURE,FIRE,MONSTER};
 bool touchingButton;
 int collision_times_with_button;
 bool isDoorOpened[10];
@@ -52,6 +52,8 @@ float sawSpeed2;
 bool isGameOver;
 int roomFourNum[3];
 bool touchingRoomFour[3];
+CVector3 monster_pos;
+
 void Init(HWND hWnd)
 {
 	g_hWnd = hWnd;										// Assign the window handle to a global window handle
@@ -74,7 +76,7 @@ void Init(HWND hWnd)
 
 
 //enum{RED_BUTTON,PLAYER,A,B,C,WALL};
-CreateTexture(g_Texture[RED_BUTTON], "Red_button.bmp");				// Load the brick wall into our first texture index
+	CreateTexture(g_Texture[RED_BUTTON], "Red_button.bmp");				// Load the brick wall into our first texture index
 	CreateTexture(g_Texture[PLAYER], "LightMap.bmp");			// Load the light map into our second texture index
 	CreateTexture(g_Texture[SAWTRAP], "Saw_Trap.bmp");				// Load the background picture into our third texture index
 	CreateTexture(g_Texture[LARGE_SCROLL], "scroll.bmp");					// Load the fog into our fourth texture index
@@ -82,6 +84,8 @@ CreateTexture(g_Texture[RED_BUTTON], "Red_button.bmp");				// Load the brick wal
 	CreateTexture(g_Texture[WALL], "wall.bmp");	
 	CreateTexture(g_Texture[DOOR], "door.bmp");	
 	CreateTexture(g_Texture[TREASURE], "Treasure_Case.bmp");	
+	CreateTexture(g_Texture[FIRE], "fire.bmp");
+	CreateTexture(g_Texture[MONSTER], "beast.bmp");
 
 	CreateTexture(g_Texture[41], "one.bmp");	
 	CreateTexture(g_Texture[42], "two.bmp");	
@@ -105,6 +109,9 @@ CreateTexture(g_Texture[RED_BUTTON], "Red_button.bmp");				// Load the brick wal
 	for (int i = 3; i<10;i++){
         isDoorOpened[i] = false;
 		}
+
+	 monster_pos = CVector3(-6,-31,0);
+
 	
 
 }
@@ -140,6 +147,7 @@ void restart(){
         isDoorOpened[i] = false;
 		}
 	
+		monster_pos = CVector3(-6,-31,0);
 }	
 
 void CheckForMovement()
@@ -329,6 +337,28 @@ void addBlock(float c_x, float c_y, float dim_x, float dim_y, int index, int tID
 {
 	drawWall(c_x,c_y,dim_x,dim_y, tID);
 	blocks[index] = Block(CVector3(c_x,c_y,0),CVector3(dim_x,dim_y,0),player_size);
+}
+
+void drawVerticalFireL(float bottom,float top){
+	int num = top - bottom + 1;
+	for (int i = 0;i<num;i++){
+		addBlock(monster_pos.x - 1.5,bottom + i,1,1,60+i,FIRE);
+	}
+}
+
+void drawVerticalFireR(float bottom,float top){
+	int num = top - bottom + 1;
+	for (int i = 0;i<num;i++){
+		addBlock(monster_pos.x + 1.5,bottom + i,1,1,60+i,FIRE);
+	}
+}
+
+void drawHorizontalFire(float left, float right){
+	int num = (right - left)+1;
+	for (int i = 0;i<num;i++){
+		addBlock(left+i,monster_pos.y+1.5,1,1,60+i,FIRE);
+	}
+
 }
 
 bool flashing = false;
@@ -535,7 +565,7 @@ void RenderScene()
 
 	
 	//draw the shaddow
-	drawWall((-31.5 - 22.5)/2.0 - 0.5, -5.5, 12,10,WALL);
+	//drawWall((-31.5 - 22.5)/2.0 - 0.5, -5.5, 12,10,WALL);
 
 	    // ROOOOM 4
 
@@ -571,19 +601,45 @@ void RenderScene()
 
     //drawWall((-11.5-24.5)/2.0,(-22.5 - 10.5)/2.0,13,12);
     
-    
-    
+    // ROOM 5 //
+	if (isDoorOpened[5]){
+		addBlock(monster_pos.x,monster_pos.y,2,2,49,MONSTER);
+		if (monster_pos.y <-16) {
+			drawHorizontalFire(-10.5,-1.5);
+			monster_pos.y += kSpeed;
+		}
+
+		else if (monster_pos.y >= -16 && monster_pos.x >= -17.5 && monster_pos.y < -4){
+			drawVerticalFireL(-21.5,-11.5);
+			monster_pos.x -= kSpeed;
+		}
+
+		else if (monster_pos.x <= -17.5 && monster_pos.y < -4){
+			
+			drawHorizontalFire(-23.5,-12.5);
+			monster_pos.y += kSpeed;
+		}
+		else if (monster_pos.y >= -4 && g_Camera.m_vView.x < -17.5){
+			drawVerticalFireL(-9.5,-1.5);
+			monster_pos.x -= kSpeed;
+		}
+		else if (monster_pos.y >= -4 && g_Camera.m_vView.x >= -17.5){
+			drawVerticalFireR(-9.5,-1.5);
+			monster_pos.x += kSpeed;
+		}
+
+		
+
+
+	}
     if (drawLargeScroll)
         drawObject(-19.5,-21,20,20,LARGE_SCROLL);
 
 //   G A M E ~~ O V E R ~~   //
-	if(saw2.hasCollision(g_Camera)||saw1.hasCollision(g_Camera)){
-	isGameOver=true;
+	if(saw2.hasCollision(g_Camera)||saw1.hasCollision(g_Camera) ||blocks[49].hasCollision(g_Camera)){
+		isGameOver=true;
 	}
-	
 
-	
-	
 
 	if(isGameOver){
 		drawGameOver();
