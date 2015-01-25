@@ -3,7 +3,7 @@
 
 
 #define EDGE_WIDTH 50
-enum{GAMEOVER,HUD};
+enum{GAMEOVER,HUD,CLEAR,COVER};
 bool isTextureLoaded = false;
 UINT hud_Texture[MAX_TEXTURES];							// This will reference to our texture data stored with OpenGL UINT is an unsigned int (only positive numbers)
 
@@ -50,6 +50,8 @@ void OrthoMode(int left, int top, int right, int bottom)
 void LoadHudTexture(){
 	CreateTexture(hud_Texture[GAMEOVER], "Gameover.bmp");
 	CreateTexture(hud_Texture[HUD],"hud.bmp");
+	CreateTexture(hud_Texture[CLEAR],"clear.bmp");
+	CreateTexture(hud_Texture[COVER],"wall.bmp");
 	isTextureLoaded = true;
 
 }
@@ -75,6 +77,7 @@ void LoadHudTexture(){
 //}
 
 
+
 void drawGameOver(){
 	OrthoMode(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
@@ -89,9 +92,9 @@ void drawGameOver(){
 
 	
 	// Bind the mask texture to our new 2D quad
-//	if(!isTextureLoaded){
+	if(!isTextureLoaded){
 		LoadHudTexture();
-	//}
+	}
 	glBindTexture(GL_TEXTURE_2D,  hud_Texture[GAMEOVER]);
 	// Display a 2D quad with the scope/cross hair mask
 	glBegin(GL_QUADS);
@@ -128,6 +131,7 @@ void drawGameOver(){
 
 
 }
+
 void drawHud(){
 	OrthoMode(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
@@ -142,9 +146,9 @@ void drawHud(){
 
 	
 	// Bind the mask texture to our new 2D quad
-//	if(!isTextureLoaded){
+	if(!isTextureLoaded){
 		LoadHudTexture();
-	//}
+	}
 	glBindTexture(GL_TEXTURE_2D,  hud_Texture[HUD]);
 	// Display a 2D quad with the scope/cross hair mask
 	glBegin(GL_QUADS);
@@ -169,7 +173,7 @@ void drawHud(){
 	// Stop drawing 
 	glEnd();	
 	
-
+	
 
 	glDisable(GL_BLEND);
 		
@@ -180,4 +184,118 @@ void drawHud(){
 	
 
 
+}
+
+void drawCover(int i){
+	OrthoMode(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+
+	glColor4f(1,1,1,0);
+	// Disable depth testing (MUST do this to make it work)
+	glDisable(GL_DEPTH_TEST);
+
+	// Select our desired depth testing and turn on blending
+	glBlendFunc(GL_DST_COLOR,GL_ZERO);
+	glDisable(GL_BLEND);											
+
+	
+	// Bind the mask texture to our new 2D quad
+	if(!isTextureLoaded){
+		LoadHudTexture();
+	}
+	glBindTexture(GL_TEXTURE_2D,  hud_Texture[COVER]);
+	// Display a 2D quad with the scope/cross hair mask
+	glBegin(GL_QUADS);
+	
+		// Notice that when we are in ortho mode, we use glVertex2f() to pass
+		// in screen coordinates, not vertices.  This makes it incredibly easy
+		// to put up 2D interface art.  It's just like doing 2D graphics.
+		// The texture coordinate stay the same regardless.
+
+			glTexCoord2f(0.0f, 1.0f);	glVertex2f(SCREEN_WIDTH*(0.04+i*0.165), SCREEN_HEIGHT*0.44);
+
+			// Display the bottom left point of the 2D image
+			glTexCoord2f(0.0f, 0.0f);	glVertex2f(SCREEN_WIDTH*(0.04+i*0.165), SCREEN_HEIGHT*0.75);
+
+			// Display the bottom right point of the 2D image
+			glTexCoord2f(1.0f, 0.0f);	glVertex2f(SCREEN_WIDTH*(0.2+i*0.165), SCREEN_HEIGHT*0.75);
+
+			// Display the top right point of the 2D image
+			glTexCoord2f(1.0f, 1.0f);	glVertex2f(SCREEN_WIDTH*(0.2+i*0.165), SCREEN_HEIGHT*0.44);
+
+
+	// Stop drawing 
+	glEnd();	
+	
+
+
+
+		glDisable(GL_BLEND);
+		
+
+
+	// Let's set our mode back to perspective 3D mode.  None of this archaic 2D stuff :)
+	PerspectiveMode();
+	
+
+
+
+}
+
+void drawClear(int index){
+	OrthoMode(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+
+	glColor4f(1,1,1,0);
+	// Disable depth testing (MUST do this to make it work)
+	glDisable(GL_DEPTH_TEST);
+
+	// Select our desired depth testing and turn on blending
+	glBlendFunc(GL_DST_COLOR,GL_ZERO);
+	glDisable(GL_BLEND);											
+
+	
+	// Bind the mask texture to our new 2D quad
+	if(!isTextureLoaded){
+		LoadHudTexture();
+	}
+	glBindTexture(GL_TEXTURE_2D,  hud_Texture[CLEAR]);
+	// Display a 2D quad with the scope/cross hair mask
+	glBegin(GL_QUADS);
+	
+		// Notice that when we are in ortho mode, we use glVertex2f() to pass
+		// in screen coordinates, not vertices.  This makes it incredibly easy
+		// to put up 2D interface art.  It's just like doing 2D graphics.
+		// The texture coordinate stay the same regardless.
+
+		// Display the top left point of the 2D image
+		glTexCoord2f(0.0f, 1.0f);	glVertex2f(0, 0);
+
+		// Display the bottom left point of the 2D image
+		glTexCoord2f(0.0f, 0.0f);	glVertex2f(0, SCREEN_HEIGHT);
+
+		// Display the bottom right point of the 2D image
+		glTexCoord2f(1.0f, 0.0f);	glVertex2f(SCREEN_WIDTH, SCREEN_HEIGHT);
+
+		// Display the top right point of the 2D image
+		glTexCoord2f(1.0f, 1.0f);	glVertex2f(SCREEN_WIDTH, 0);
+
+	// Stop drawing 
+	glEnd();	
+	
+
+
+
+		glDisable(GL_BLEND);
+		
+
+
+	// Let's set our mode back to perspective 3D mode.  None of this archaic 2D stuff :)
+	PerspectiveMode();
+	
+		for(int i =0; i<index;i++){
+		drawCover(i);
+	}
+
+	
 }

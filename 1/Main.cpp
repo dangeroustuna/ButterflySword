@@ -50,6 +50,8 @@ float sawOffsetY2;
 float sawSpeed1;
 float sawSpeed2;
 bool isGameOver;
+bool isDrawClear;
+int numClear;
 int roomFourNum[3];
 int roomSevenNum[3];
 int roomSixNum[3]; // JIMMY
@@ -159,6 +161,8 @@ void reset(){
 			blocks[60+i] = Block(CVector3(1,1,0),CVector3(1,1,0),1.0);
 		}
 		monsterTimer=180;
+		isDrawClear= false;
+		numClear=0;
 }	
 
 void CheckForMovement(){
@@ -236,7 +240,22 @@ WPARAM MainLoop()
 		{ 		
 			if(AnimateNextFrame(60))					// Make sure we only animate 60 FPS
 			{
+				// set index of clear cover
 				CheckForMovement();
+				if(numClear==0 && GetKeyState(0x43)){
+					numClear=1;
+				}
+				else if(numClear==1 && GetKeyState(0x4C)){
+					numClear=2;
+				}
+				else if(numClear==2 && GetKeyState(0x45)){
+					numClear=3;
+				}
+				else if(numClear==3 && GetKeyState(0x41)){
+					numClear=4;
+				}
+
+					//end of clear cover
 				if(GetKeyState(0x52) & 0x80){			//check if r is pressed
 					reset();
 				}
@@ -407,8 +426,8 @@ void RenderScene()
 	drawObject(-27,-17,12,11,ROOM_SEVEN_FLOOR);
     addBlock(-21,-0.5,42,1,0,WALL);
     addBlock(-8,-10.5,16,1,1,WALL);
-    addBlock(-27,-10.5,16,1,2,WALL);
-    addBlock(-40,-10.5,4,1,3,WALL);
+    addBlock(-26.5,-10.5,15,1,2,WALL);
+    addBlock(40,-10.5,4,1,3,WALL);//deleted
     addBlock(-19.5,-22.5,17,1,4,WALL);
     addBlock(-32,-22.5,2,1,5,WALL);
     addBlock(-21,-35.5,42,1,6,WALL);
@@ -471,12 +490,7 @@ void RenderScene()
         }
     }
 
-    if(!isDoorOpened[9]){
-        addBlock(-36.5,-10.5,3,0.5,59,DOOR);
-        if(blocks[59].hasCollision(g_Camera)){
-            g_Camera = checkCollision(g_Camera,blocks[59]);
-        }
-    }
+
 
 
     /////////////////////// DOORS ///////////////////
@@ -538,11 +552,11 @@ void RenderScene()
     // ROOOOM 2 //
 
 
-    drawObject(-13.5,-0.52,1,1,RED_BUTTON);
+    drawObject(-13.5,-1,1,1,RED_BUTTON);
     Block buttonBlock = Block(CVector3(-13.5,-0.52,0),CVector3(1,1,0),player_size);
 
     if (collision_times_with_button < 3 && !flashing){
-        drawWall(-15.5,-5.5,13.0,11, WALL);
+        drawWall(-15.5,-5.5,13.0,12, WALL);
     }
 
     if (buttonBlock.hasCollision(g_Camera)) {
@@ -745,16 +759,78 @@ void RenderScene()
 	
 	if (roomSixNum[0] == 1 && roomSixNum[1] == 2 && roomSixNum[2] == 4){
         isDoorOpened[7] = true;
+		isDoorOpened[9]= true;	//for testing
     }
 
 	//DAVID//
 	//room of Clear//
+	if (g_Camera.m_vView.x < -34 && g_Camera.m_vView.x > -35 && g_Camera.m_vView.y < -15 && g_Camera.m_vView.y > -18){
+		isShadowShow[8] = false;
+		isShadowShow[9] = false;
+	}
+    
+
 	drawObject(-37.5,-5.5,1,1,STAR);
     Block star = Block(CVector3(-37.5,-5.5,0),CVector3(1,1,0),player_size);
-    bool drawClear = false;
-    if(room_seven_scroll.hasCollision(g_Camera)){
-        drawClear = true;
+    if(star.hasCollision(g_Camera)){
+        isDrawClear = true;
     }
+
+	for(int i=1;i<10;i++){
+		glPushMatrix();
+		glTranslatef(0,0,0.8*i);
+
+		addBlock(-21,-0.5,42,1,0,WALL);
+		addBlock(-8,-10.5,16,1,1,WALL);
+		addBlock(-26.5,-10.5,15,1,2,WALL);
+		addBlock(40,-10.5,4,1,3,WALL);//deleted
+		addBlock(-19.5,-22.5,17,1,4,WALL);
+		addBlock(-32,-22.5,2,1,5,WALL);
+		addBlock(-21,-35.5,42,1,6,WALL);
+		addBlock(-0.5,-18,1,36,7,WALL);
+		addBlock(-9.5,-1,1,2,8,WALL);
+		addBlock(-9.5,-8,1,6,9,WALL);
+		addBlock(-21.5,-2,1,2,10,WALL);
+		addBlock(-21.5,-8,1,4,11,WALL);
+		addBlock(-11.5,-15,1,8,12,WALL);
+		addBlock(-11.5,-23.5,1,3,13,WALL);
+		addBlock(-11.5,-32,1,8,14,WALL);
+		addBlock(-20.5,-17,1,12,15,WALL);
+		addBlock(-33.5,-8,1,16,16,WALL);
+		addBlock(-33.5,-27.5,1,17,17,WALL);
+		addBlock(-41.5,-18,1,36,18,WALL);
+
+
+		//////////////////////// WALLLLS ///////////////////////////////////////////////////
+
+		////////////////////// DOORS ////////////////////////
+		if(!isDoorOpened[3]){
+			addBlock(-21.5,-4.5,0.5,3,53,DOOR);
+		}
+
+		if(!isDoorOpened[4]){
+			addBlock(-17.5,-10.5,3,0.5,54,DOOR);
+		}
+
+		if(!isDoorOpened[5]){
+			addBlock(-11.5,-20.5,0.5,3,55,DOOR);
+		}
+
+		if(!isDoorOpened[6]){
+			addBlock(-11.5,-26.5,0.5,3,56,DOOR);
+		}
+
+		if(!isDoorOpened[7]){
+			addBlock(-29.5,-22.5,3,0.5,57,DOOR);
+		}
+
+		if(!isDoorOpened[8]){
+			addBlock(-33.5,-17.5,0.5,3,58,DOOR);
+		}
+
+
+		glPopMatrix();
+	}
 
 	// Shadows //
 	if(isShadowShow[3])
@@ -784,13 +860,17 @@ void RenderScene()
 
 //   G A M E ~~ O V E R ~~   //
 	if(saw2.hasCollision(g_Camera)||saw1.hasCollision(g_Camera) ||blocks[49].hasCollision(g_Camera)){
-//		isGameOver=true;
+		isGameOver=true;
 	}
 
 
 	if(isGameOver){
 		drawGameOver();
 	}
+	if(isDrawClear){
+		drawClear(numClear);
+	}
+
 	drawHud();
 	SwapBuffers(g_hDC);
 	assert(glGetError() == GL_NO_ERROR);							
