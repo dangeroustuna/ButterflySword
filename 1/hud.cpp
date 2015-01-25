@@ -119,8 +119,7 @@ void drawGameOver(){
 
 	glDisable(GL_BLEND);
 		
-	//
-	glEnable(GL_DEPTH_TEST);
+
 
 	// Let's set our mode back to perspective 3D mode.  None of this archaic 2D stuff :)
 	PerspectiveMode();
