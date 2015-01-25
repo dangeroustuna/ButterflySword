@@ -1,4 +1,0 @@
-ButterflySword
-==============
-
-An RPG game
