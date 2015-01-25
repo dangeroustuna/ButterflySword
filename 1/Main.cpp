@@ -20,6 +20,10 @@
 #include "glext.h"										// * IMPORTANT * Must include for extentions
 #include <assert.h>
 
+#include <iostream>
+#include <Windows.h>
+#pragma comment(lib, "winmm.lib") // Add the Windows library that contains the code for the function PlaySound()
+
 #define kSpeed	0.2f
 
 bool  g_bFullScreen = true;								// Set full screen as default
@@ -35,10 +39,15 @@ UINT g_Texture[MAX_TEXTURES];							// This will reference to our texture data s
 PFNGLMULTITEXCOORD2FARBPROC		glMultiTexCoord2fARB	= NULL;
 PFNGLACTIVETEXTUREARBPROC		glActiveTextureARB		= NULL;
 
-enum{RED_BUTTON,PLAYER,A,B,C,WALL};
+enum{RED_BUTTON,PLAYER,SAWTRAP,B,C,WALL};
 bool touchingButton = false;
 int collision_times_with_button = 0;
-
+bool isDoorOpened[10];
+bool isShawdowShow[10];
+float sawOffsetY1=0;
+float sawOffsetY2=0;
+float sawSpeed1=0.15;
+float sawSpeed2=0.25;
 
 
 void Init(HWND hWnd)
@@ -47,6 +56,7 @@ void Init(HWND hWnd)
 	GetClientRect(g_hWnd, &g_rRect);					// Assign the windows rectangle to a global RECT
 	InitializeOpenGL(g_rRect.right, g_rRect.bottom);	// Init OpenGL with the global rect
 	g_Camera.PositionCamera(-5, -5, 40,   -5, -5, 0,   0, 1, 0);
+	PlaySound("puzzle_music.wav", NULL, SND_FILENAME | SND_ASYNC|SND_LOOP);
 
 	glActiveTextureARB		= (PFNGLACTIVETEXTUREARBPROC)		wglGetProcAddress("glActiveTextureARB");
 	glMultiTexCoord2fARB	= (PFNGLMULTITEXCOORD2FARBPROC)		wglGetProcAddress("glMultiTexCoord2fARB");
@@ -62,12 +72,12 @@ void Init(HWND hWnd)
 
 
 //enum{RED_BUTTON,PLAYER,A,B,C,WALL};
-	CreateTexture(g_Texture[0], "Red_button.bmp");				// Load the brick wall into our first texture index
-	CreateTexture(g_Texture[1], "LightMap.bmp");			// Load the light map into our second texture index
-	CreateTexture(g_Texture[2], "Cove.bmp");				// Load the background picture into our third texture index
-	CreateTexture(g_Texture[3], "Fog.bmp");					// Load the fog into our fourth texture index
-	CreateTexture(g_Texture[4], "steel.bmp");	
-	CreateTexture(g_Texture[5], "wall.bmp");	
+	CreateTexture(g_Texture[RED_BUTTON], "Red_button.bmp");				// Load the brick wall into our first texture index
+	CreateTexture(g_Texture[PLAYER], "LightMap.bmp");			// Load the light map into our second texture index
+	CreateTexture(g_Texture[SAWTRAP], "Saw_Trap.bmp");				// Load the background picture into our third texture index
+	CreateTexture(g_Texture[B], "Fog.bmp");					// Load the fog into our fourth texture index
+	CreateTexture(g_Texture[C], "steel.bmp");	
+	CreateTexture(g_Texture[WALL], "wall.bmp");	
 
 /////// * /////////// * /////////// * NEW * /////// * /////////// * /////////// *
 
@@ -311,9 +321,9 @@ void RenderScene()
 		}
 	}
 
-	//drawWall((-9.0 - 22)/2.0 , -5.5,22-9,11-0);
+	//drawWall((-9.0 - 22)/2.0 , -5.5,22-9,11-0);//room 2
 	
-	//drawWall((-31.5 - 22.5)/2.0 - 0.5, -5.5, 12,10);
+	//drawWall((-31.5 - 22.5)/2.0 - 0.5, -5.5, 12,10); //room 3
 	//drawWall((-11.5-24.5)/2.0,(-22.5 - 10.5)/2.0,13,12);
 	//drawWall(-6,-23,11,25);
 	//drawWall(-22.5,-29,22,13);
@@ -382,6 +392,27 @@ void RenderScene()
 		}
 	}
 	
+	//Room 3//
+	sawOffsetY1+=sawSpeed1;
+	if(sawOffsetY1>=3||sawOffsetY1<=-3){
+		sawSpeed1 *= -1;
+	}
+	sawOffsetY2+=sawSpeed2;
+	if(sawOffsetY2>=3||sawOffsetY2<=-3){
+		sawSpeed2 *= -1;
+	}
+
+	drawObject(-25.5,-5.0+sawOffsetY1,1.,2.0,SAWTRAP);
+	Block saw1 = Block(CVector3(-25.5,-5+sawOffsetY1,0),CVector3(1,2,0),player_size);
+	drawObject(-29.5,-5.0+sawOffsetY2,1.,2.0,SAWTRAP);
+	Block saw2 = Block(CVector3(-29.5,-5+sawOffsetY2,0),CVector3(1,2,0),player_size);
+	
+	if(saw2.hasCollision(g_Camera)||saw1.hasCollision(g_Camera)){
+	//game over, TODO~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	}
+
+	//draw the shaddow
+	//drawWall((-31.5 - 22.5)/2.0 - 0.5, -5.5, 12,10);
 	
 	
 
