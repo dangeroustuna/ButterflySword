@@ -152,6 +152,7 @@ void restart(){
 
 void CheckForMovement()
 {
+	if(isGameOver) return;						//who need to move when the game is over
 	CVector3 direction;
 	direction.z = 0;
 	
@@ -343,13 +344,19 @@ void drawVerticalFireL(float bottom,float top){
 	int num = top - bottom + 1;
 	for (int i = 0;i<num;i++){
 		addBlock(monster_pos.x - 1.5,bottom + i,1,1,60+i,FIRE);
+		if(blocks[60+i].hasCollision(g_Camera)){
+			isGameOver=true;
+		}
 	}
 }
 
 void drawVerticalFireR(float bottom,float top){
 	int num = top - bottom + 1;
-	for (int i = 0;i<num;i++){
+	for (int i = 0;i<num;i++){	
 		addBlock(monster_pos.x + 1.5,bottom + i,1,1,60+i,FIRE);
+		if(blocks[60+i].hasCollision(g_Camera)){
+			isGameOver=true;
+		}
 	}
 }
 
@@ -357,6 +364,9 @@ void drawHorizontalFire(float left, float right){
 	int num = (right - left)+1;
 	for (int i = 0;i<num;i++){
 		addBlock(left+i,monster_pos.y+1.5,1,1,60+i,FIRE);
+		if(blocks[60+i].hasCollision(g_Camera)){
+			isGameOver=true;
+		}
 	}
 
 }
@@ -397,10 +407,10 @@ void RenderScene()
     addBlock(-9.5,-8,1,6,9,WALL);
     addBlock(-21.5,-2,1,2,10,WALL);
     addBlock(-21.5,-8,1,4,11,WALL);
-    addBlock(-11.5,-12,1,4,12,WALL);
-    addBlock(-11.5,-21,1,8,13,WALL);
+    addBlock(-11.5,-15,1,8,12,WALL);
+    addBlock(-11.5,-23.5,1,3,13,WALL);
     addBlock(-11.5,-32,1,8,14,WALL);
-    addBlock(-24.5,-17,1,12,15,WALL);
+    addBlock(-20.5,-17,1,12,15,WALL);
     addBlock(-33.5,-8,1,16,16,WALL);
     addBlock(-33.5,-27.5,1,17,17,WALL);
     addBlock(-41.5,-18,1,36,18,WALL);
@@ -424,7 +434,7 @@ void RenderScene()
     }
 
     if(!isDoorOpened[5]){
-        addBlock(-11.5,-15.5,0.5,3,55,DOOR);
+        addBlock(-11.5,-20.5,0.5,3,55,DOOR);
         if(blocks[55].hasCollision(g_Camera)){
             g_Camera = checkCollision(g_Camera,blocks[55]);
         }
@@ -570,7 +580,7 @@ void RenderScene()
 	    // ROOOOM 4
 
     
-    drawObject(-19.5,-21,1,2,MINI_SCROLL);
+    drawObject(-15.5,-21,1,2,MINI_SCROLL);
     Block scroll = Block(CVector3(-19.5,-21,0),CVector3(1,2,0),player_size);
     bool drawLargeScroll = false;
     if(scroll.hasCollision(g_Camera)){
@@ -633,7 +643,7 @@ void RenderScene()
 
 	}
     if (drawLargeScroll)
-        drawObject(-19.5,-21,20,20,LARGE_SCROLL);
+        drawObject(-15.5,-21,20,20,LARGE_SCROLL);
 
 //   G A M E ~~ O V E R ~~   //
 	if(saw2.hasCollision(g_Camera)||saw1.hasCollision(g_Camera) ||blocks[49].hasCollision(g_Camera)){
