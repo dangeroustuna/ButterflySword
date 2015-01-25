@@ -53,6 +53,11 @@ bool isGameOver;
 int roomFourNum[3];
 bool touchingRoomFour[3];
 CVector3 monster_pos;
+int monsterTimer;
+Block blocks[100];
+int blocks_size;
+
+void reset();
 
 void Init(HWND hWnd)
 {
@@ -95,30 +100,13 @@ void Init(HWND hWnd)
 	CreateTexture(g_Texture[46], "six.bmp");	
 
 
-	touchingButton = false;
-	collision_times_with_button = 0;
-	sawOffsetY1=0;
-	sawOffsetY2=0;
-	sawSpeed1=0.15;
-	sawSpeed2=0.25;
-	isGameOver=false;
-	for(int i=0; i<3;i++){
-		roomFourNum[i] = 1;
-		touchingRoomFour[i] = false;
-	}
-	for (int i = 3; i<10;i++){
-        isDoorOpened[i] = false;
-		}
-
-	 monster_pos = CVector3(-6,-31,0);
-
-	
+	reset();
 
 }
 
 
 
-void restart(){
+void reset(){
 
 		g_Camera.PositionCamera(-5, -5, 40,   -5, -5, 0,   0, 1, 0);
 		PlaySound("puzzle_music.wav", NULL, SND_FILENAME | SND_ASYNC|SND_LOOP);
@@ -148,10 +136,14 @@ void restart(){
 		}
 	
 		monster_pos = CVector3(-6,-31,0);
+		blocks[49] = Block(CVector3(1,1,0),CVector3(1,1,0),1.0);
+		for(int i=0;i<15;i++){
+			blocks[60+i] = Block(CVector3(1,1,0),CVector3(1,1,0),1.0);
+		}
+		monsterTimer=120;
 }	
 
-void CheckForMovement()
-{
+void CheckForMovement(){
 	if(isGameOver) return;						//who need to move when the game is over
 	CVector3 direction;
 	direction.z = 0;
@@ -228,7 +220,7 @@ WPARAM MainLoop()
 			{
 				CheckForMovement();
 				if(GetKeyState(0x52) & 0x80){			//check if r is pressed
-					restart();
+					reset();
 				}
 				RenderScene();							// Render the scene every frame
 			}
@@ -325,8 +317,7 @@ void drawObject(float c_x,float c_y,float dim_x,float dim_y, int textureID){
 	glPopMatrix();
 }
 
-Block blocks[100];
-int blocks_size=0;
+
 void drawWall(float c_x,float c_y,float dim_x,float dim_y, int tID){
 	drawObject(c_x,c_y,dim_x,dim_y,tID);
 }
@@ -580,8 +571,8 @@ void RenderScene()
 	    // ROOOOM 4
 
     
-    drawObject(-15.5,-21,1,2,MINI_SCROLL);
-    Block scroll = Block(CVector3(-19.5,-21,0),CVector3(1,2,0),player_size);
+    drawObject(-14.5,-21,1,2,MINI_SCROLL);
+    Block scroll = Block(CVector3(-14.5,-21,0),CVector3(1,2,0),player_size);
     bool drawLargeScroll = false;
     if(scroll.hasCollision(g_Camera)){
         drawLargeScroll = true;
@@ -614,30 +605,45 @@ void RenderScene()
     // ROOM 5 //
 	if (isDoorOpened[5]){
 		addBlock(monster_pos.x,monster_pos.y,2,2,49,MONSTER);
-		if (monster_pos.y <-16) {
-			drawHorizontalFire(-10.5,-1.5);
-			monster_pos.y += kSpeed;
+		if (monsterTimer>0){					//use the timer to give the player a head start
+			monsterTimer--;
 		}
+		else{
+			if (monster_pos.x == 1234){
+				;
+			}
+			else if (monster_pos.y <-16) {
+				drawHorizontalFire(-10.5,-1.5);
+				monster_pos.y += kSpeed*0.8;
+			}
 
-		else if (monster_pos.y >= -16 && monster_pos.x >= -17.5 && monster_pos.y < -4){
-			drawVerticalFireL(-21.5,-11.5);
-			monster_pos.x -= kSpeed;
-		}
+			else if (monster_pos.y >= -16 && monster_pos.x >= -17.5 && monster_pos.y < -4){
+				drawVerticalFireL(-21.5,-11.5);
+				monster_pos.x -= kSpeed;
+			}
 
-		else if (monster_pos.x <= -17.5 && monster_pos.y < -4){
+			else if (monster_pos.x <= -17.5 && monster_pos.y < -4){
 			
-			drawHorizontalFire(-23.5,-12.5);
-			monster_pos.y += kSpeed;
-		}
-		else if (monster_pos.y >= -4 && g_Camera.m_vView.x < -17.5){
-			drawVerticalFireL(-9.5,-1.5);
-			monster_pos.x -= kSpeed;
-		}
-		else if (monster_pos.y >= -4 && g_Camera.m_vView.x >= -17.5){
-			drawVerticalFireR(-9.5,-1.5);
-			monster_pos.x += kSpeed;
-		}
+				drawHorizontalFire(-23.5,-12.5);
+				monster_pos.y += kSpeed;
+			}
+			else if (monster_pos.y >= -4 && g_Camera.m_vView.x < -17.5){
+				drawVerticalFireL(-9.5,-1.5);
+				monster_pos.x -= kSpeed;
+				if (monster_pos.x <= -26){
+					monster_pos.x = 1234;				//we call this place "Monster's boneyard"
+					blocks[49] = Block(CVector3(1,1,0),CVector3(1,1,0),1.0);
+					for(int i=0;i<15;i++){
+						blocks[60+i] = Block(CVector3(1,1,0),CVector3(1,1,0),1.0);
+					}
+				}
+			}
+			else if (monster_pos.y >= -4 && g_Camera.m_vView.x >= -17.5){
+				drawVerticalFireR(-9.5,-1.5);
+				monster_pos.x += kSpeed;
+			}
 
+		}
 		
 
 
