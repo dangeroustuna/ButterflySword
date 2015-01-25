@@ -40,7 +40,7 @@ UINT g_Texture[MAX_TEXTURES];							// This will reference to our texture data s
 PFNGLMULTITEXCOORD2FARBPROC		glMultiTexCoord2fARB	= NULL;
 PFNGLACTIVETEXTUREARBPROC		glActiveTextureARB		= NULL;
 
-enum{RED_BUTTON,PLAYER,SAWTRAP,LARGE_SCROLL,MINI_SCROLL,WALL,DOOR,TREASURE,FIRE,MONSTER};
+enum{RED_BUTTON,PLAYER,SAWTRAP,LARGE_SCROLL,MINI_SCROLL,WALL,DOOR,TREASURE,FIRE,MONSTER,ROOM_SIX_SCROLL,ONE_TWO_THREE,ROOM_SEVEN_FLOOR,ROOM_SEVEN_HINT};
 bool touchingButton;
 int collision_times_with_button;
 bool isDoorOpened[10];
@@ -51,7 +51,11 @@ float sawSpeed1;
 float sawSpeed2;
 bool isGameOver;
 int roomFourNum[3];
+int roomSevenNum[3];
+int roomSixNum[3]; // JIMMY
+bool touchingRoomSix[3]; // JIMMY
 bool touchingRoomFour[3];
+bool touchingRoomSeven[3];
 CVector3 monster_pos;
 int monsterTimer;
 Block blocks[100];
@@ -91,6 +95,10 @@ void Init(HWND hWnd)
 	CreateTexture(g_Texture[TREASURE], "Treasure_Case.bmp");	
 	CreateTexture(g_Texture[FIRE], "fire.bmp");
 	CreateTexture(g_Texture[MONSTER], "beast.bmp");
+	CreateTexture(g_Texture[ROOM_SIX_SCROLL],"room_six_scroll.bmp"); // JIMMY
+	CreateTexture(g_Texture[ONE_TWO_THREE],"one_two_three.bmp"); // JIMMY 
+	CreateTexture(g_Texture[ROOM_SEVEN_FLOOR], "Room_Seven_Floor.bmp");
+	CreateTexture(g_Texture[ROOM_SEVEN_HINT], "Room_Seven_Hint.bmp");
 
 	CreateTexture(g_Texture[41], "one.bmp");	
 	CreateTexture(g_Texture[42], "two.bmp");	
@@ -98,6 +106,10 @@ void Init(HWND hWnd)
 	CreateTexture(g_Texture[44], "four.bmp");	
 	CreateTexture(g_Texture[45], "five.bmp");	
 	CreateTexture(g_Texture[46], "six.bmp");	
+	CreateTexture(g_Texture[47], "seven.bmp");
+	CreateTexture(g_Texture[48], "eight.bmp");
+	CreateTexture(g_Texture[49], "nine.bmp");
+	CreateTexture(g_Texture[50], "zero.bmp");
 
 
 	reset();
@@ -130,6 +142,10 @@ void reset(){
 		for(int i=0; i<3;i++){
 			roomFourNum[i] = 1;
 			touchingRoomFour[i] = false;
+			roomSixNum[i] = 1; // JIMMY
+			touchingRoomSix[i] = false; // JIMMY
+			roomSevenNum[i] = 1;
+			touchingRoomSeven[i] = false;
 		}
 		for (int i = 3; i<10;i++){
         isDoorOpened[i] = false;
@@ -252,7 +268,7 @@ CCamera checkCollision(CCamera camera, Block block){
 	CVector3 point = camera.View();
 	CVector3 eye = camera.Position();
 	CCamera newCamera = CCamera();
-
+	return camera;
 	if (block.hasCollision(camera))				
 	{
 		// relative to block
@@ -383,9 +399,10 @@ void RenderScene()
 	gluLookAt(g_Camera.m_vPosition.x, g_Camera.m_vPosition.y, g_Camera.m_vPosition.z,	
 			  g_Camera.m_vView.x,	  g_Camera.m_vView.y,     g_Camera.m_vView.z,	
 			  g_Camera.m_vUpVector.x, g_Camera.m_vUpVector.y, g_Camera.m_vUpVector.z);
-
+	drawObject(-22.5,-29.5,21,13,ONE_TWO_THREE);//JIMMY
 
     /////////////////////// WALLLLLLLS //////////////////////////////////////////////
+	drawObject(-27,-17,12,11,ROOM_SEVEN_FLOOR);
     addBlock(-21,-0.5,42,1,0,WALL);
     addBlock(-8,-10.5,16,1,1,WALL);
     addBlock(-27,-10.5,16,1,2,WALL);
@@ -588,7 +605,7 @@ void RenderScene()
         if(blocks[40+i].hasCollision(g_Camera)){
             if(!touchingRoomFour[i]){
                 touchingRoomFour[i] = true;
-                roomFourNum[i] = roomFourNum[i]%6 + 1;
+                roomFourNum[i] = roomFourNum[i]%10 + 1;
             }
         }
         else{
@@ -636,6 +653,7 @@ void RenderScene()
 					for(int i=0;i<15;i++){
 						blocks[60+i] = Block(CVector3(1,1,0),CVector3(1,1,0),1.0);
 					}
+					isDoorOpened[6] = true;//JIMMY
 				}
 			}
 			else if (monster_pos.y >= -4 && g_Camera.m_vView.x >= -17.5){
@@ -648,12 +666,85 @@ void RenderScene()
 
 
 	}
-    if (drawLargeScroll)
+		////// JIMMY //////
+	//// ROOOOM 6 ///////////
+
+	drawObject(-14,-34,2,1,ROOM_SIX_SCROLL);
+    Block room_six_scroll = Block(CVector3(-14,-34,0),CVector3(2,1,0),player_size);
+    bool drawRoomSixScroll = false;
+    if(room_six_scroll.hasCollision(g_Camera)){
+        drawRoomSixScroll = true;
+    }
+
+	// numbers on floor
+    addBlock(-31.5,-24,1,1,30,40+roomSixNum[0]);
+    addBlock(-29.5,-24,1,1,31,40+roomSixNum[1]);
+    addBlock(-27.5,-24,1,1,32,40+roomSixNum[2]);
+
+    for(int i=0;i<3;i++){
+        if(blocks[30+i].hasCollision(g_Camera)){
+            if(!touchingRoomSix[i]){
+                touchingRoomSix[i] = true;
+                roomSixNum[i] = roomSixNum[i]%6 + 1;
+            }
+        }
+        else{
+            touchingRoomSix[i] = false;
+        }
+    }
+
+
+
+
+	////// END OF JIMMY //////////
+
+
+	//Room 7//
+	drawObject(-27,-13.4,1,2,MINI_SCROLL);
+    Block room_seven_scroll = Block(CVector3(-27,-13.4,0),CVector3(1,2,0),player_size);
+    bool drawRoomSevenScroll = false;
+    if(room_seven_scroll.hasCollision(g_Camera)){
+        drawRoomSevenScroll = true;
+    }
+	    // numbers on floor
+    addBlock(-27.9,-20.1,1,1,70,40+roomSevenNum[0]);
+    addBlock(-25.2,-20.1,1,1,71,40+roomSevenNum[1]);
+    addBlock(-22.6,-20.1,1,1,72,40+roomSevenNum[2]);
+
+    for(int i=0;i<3;i++){
+        if(blocks[70+i].hasCollision(g_Camera)){
+            if(!touchingRoomSeven[i]){
+                touchingRoomSeven[i] = true;
+                roomSevenNum[i] = roomSevenNum[i]%10 + 1;
+            }
+        }
+        else{
+            touchingRoomSeven[i] = false;
+        }
+    }
+
+    if (roomSevenNum[0] == 8 && roomSevenNum[1] == 5 && roomSevenNum[2] == 8){
+        isDoorOpened[8] = true;
+    }
+	
+	if (roomSixNum[0] == 1 && roomSixNum[1] == 2 && roomSixNum[2] == 4){
+        isDoorOpened[7] = true;
+    }
+
+	/// Scrolls///
+	if (drawLargeScroll)
         drawObject(-15.5,-21,20,20,LARGE_SCROLL);
+
+	if (drawRoomSevenScroll){
+		drawObject(-27,-13.4,20,20,ROOM_SEVEN_HINT);
+	}
+	if (drawRoomSixScroll){ // JIMMY
+		drawObject(-15,-30,20,15,ROOM_SIX_SCROLL);		// JIMMY
+	}
 
 //   G A M E ~~ O V E R ~~   //
 	if(saw2.hasCollision(g_Camera)||saw1.hasCollision(g_Camera) ||blocks[49].hasCollision(g_Camera)){
-		isGameOver=true;
+//		isGameOver=true;
 	}
 
 
