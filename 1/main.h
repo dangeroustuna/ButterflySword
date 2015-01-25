@@ -12,7 +12,7 @@
 #define SCREEN_HEIGHT 600								// We want our screen height 600 pixels
 #define SCREEN_DEPTH 16									// We want 16 bits per pixel
 
-#define MAX_TEXTURES 4									// This says how many texture we will be using
+#define MAX_TEXTURES 100									// This says how many texture we will be using
 
 extern bool  g_bFullScreen;									// Set full screen as default
 extern HWND  g_hWnd;										// This is the handle for the window
@@ -214,6 +214,6 @@ void DeInit();
 // Ben Humphrey (DigiBen)
 // Game Programmer
 // DigiBen@GameTutorials.com
-// ©2000-2005 GameTutorials
+// ?000-2005 GameTutorials
 //
 //

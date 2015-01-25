@@ -125,16 +125,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\..\SAOgame\FinalA\hud.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="hud.cpp" />
     <ClCompile Include="Init.cpp" />
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\..\SAOgame\FinalA\hud.h" />
     <ClInclude Include="Glext.h" />
+    <ClInclude Include="hud.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="models.h" />
+    <ClInclude Include="string.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

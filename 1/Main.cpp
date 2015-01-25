@@ -18,6 +18,7 @@
 
 #include "main.h"										// This includes our header file
 #include "glext.h"										// * IMPORTANT * Must include for extentions
+#include "hud.h"
 #include <assert.h>
 
 #include <iostream>
@@ -39,17 +40,18 @@ UINT g_Texture[MAX_TEXTURES];							// This will reference to our texture data s
 PFNGLMULTITEXCOORD2FARBPROC		glMultiTexCoord2fARB	= NULL;
 PFNGLACTIVETEXTUREARBPROC		glActiveTextureARB		= NULL;
 
-enum{RED_BUTTON,PLAYER,SAWTRAP,B,C,WALL};
-bool touchingButton = false;
-int collision_times_with_button = 0;
+enum{RED_BUTTON,PLAYER,SAWTRAP,LARGE_SCROLL,MINI_SCROLL,WALL,DOOR,TREASURE};
+bool touchingButton;
+int collision_times_with_button;
 bool isDoorOpened[10];
 bool isShawdowShow[10];
-float sawOffsetY1=0;
-float sawOffsetY2=0;
-float sawSpeed1=0.15;
-float sawSpeed2=0.25;
-
-
+float sawOffsetY1;
+float sawOffsetY2;
+float sawSpeed1;
+float sawSpeed2;
+bool isGameOver;
+int roomFourNum[3];
+bool touchingRoomFour[3];
 void Init(HWND hWnd)
 {
 	g_hWnd = hWnd;										// Assign the window handle to a global window handle
@@ -72,16 +74,73 @@ void Init(HWND hWnd)
 
 
 //enum{RED_BUTTON,PLAYER,A,B,C,WALL};
-	CreateTexture(g_Texture[RED_BUTTON], "Red_button.bmp");				// Load the brick wall into our first texture index
+CreateTexture(g_Texture[RED_BUTTON], "Red_button.bmp");				// Load the brick wall into our first texture index
 	CreateTexture(g_Texture[PLAYER], "LightMap.bmp");			// Load the light map into our second texture index
 	CreateTexture(g_Texture[SAWTRAP], "Saw_Trap.bmp");				// Load the background picture into our third texture index
-	CreateTexture(g_Texture[B], "Fog.bmp");					// Load the fog into our fourth texture index
-	CreateTexture(g_Texture[C], "steel.bmp");	
+	CreateTexture(g_Texture[LARGE_SCROLL], "scroll.bmp");					// Load the fog into our fourth texture index
+	CreateTexture(g_Texture[MINI_SCROLL], "scroll_mini.bmp");	
 	CreateTexture(g_Texture[WALL], "wall.bmp");	
+	CreateTexture(g_Texture[DOOR], "door.bmp");	
+	CreateTexture(g_Texture[TREASURE], "Treasure_Case.bmp");	
 
-/////// * /////////// * /////////// * NEW * /////// * /////////// * /////////// *
+	CreateTexture(g_Texture[41], "one.bmp");	
+	CreateTexture(g_Texture[42], "two.bmp");	
+	CreateTexture(g_Texture[43], "three.bmp");	
+	CreateTexture(g_Texture[44], "four.bmp");	
+	CreateTexture(g_Texture[45], "five.bmp");	
+	CreateTexture(g_Texture[46], "six.bmp");	
+
+
+	touchingButton = false;
+	collision_times_with_button = 0;
+	sawOffsetY1=0;
+	sawOffsetY2=0;
+	sawSpeed1=0.15;
+	sawSpeed2=0.25;
+	isGameOver=false;
+	for(int i=0; i<3;i++){
+		roomFourNum[i] = 1;
+		touchingRoomFour[i] = false;
+	}
+	for (int i = 3; i<10;i++){
+        isDoorOpened[i] = false;
+		}
+	
 
 }
+
+
+
+void restart(){
+
+		g_Camera.PositionCamera(-5, -5, 40,   -5, -5, 0,   0, 1, 0);
+		PlaySound("puzzle_music.wav", NULL, SND_FILENAME | SND_ASYNC|SND_LOOP);
+
+		glActiveTextureARB		= (PFNGLACTIVETEXTUREARBPROC)		wglGetProcAddress("glActiveTextureARB");
+		glMultiTexCoord2fARB	= (PFNGLMULTITEXCOORD2FARBPROC)		wglGetProcAddress("glMultiTexCoord2fARB");
+		if(!glActiveTextureARB || !glMultiTexCoord2fARB)
+			{
+			// Print a error message and quit.
+			MessageBox(g_hWnd, "Your version of OpenGL does not support multitexturing", "Error", MB_OK);
+			PostQuitMessage(0);
+			}
+
+		touchingButton = false;
+		collision_times_with_button = 0;
+		sawOffsetY1=0;
+		sawOffsetY2=0;
+		sawSpeed1=0.15;
+		sawSpeed2=0.25;
+		isGameOver=false;
+		for(int i=0; i<3;i++){
+			roomFourNum[i] = 1;
+			touchingRoomFour[i] = false;
+		}
+		for (int i = 3; i<10;i++){
+        isDoorOpened[i] = false;
+		}
+	
+}	
 
 void CheckForMovement()
 {
@@ -159,6 +218,9 @@ WPARAM MainLoop()
 			if(AnimateNextFrame(60))					// Make sure we only animate 60 FPS
 			{
 				CheckForMovement();
+				if(GetKeyState(0x52) & 0x80){			//check if r is pressed
+					restart();
+				}
 				RenderScene();							// Render the scene every frame
 			}
 			else
@@ -256,16 +318,16 @@ void drawObject(float c_x,float c_y,float dim_x,float dim_y, int textureID){
 
 Block blocks[100];
 int blocks_size=0;
-void drawWall(float c_x,float c_y,float dim_x,float dim_y){
-	drawObject(c_x,c_y,dim_x,dim_y,WALL);
+void drawWall(float c_x,float c_y,float dim_x,float dim_y, int tID){
+	drawObject(c_x,c_y,dim_x,dim_y,tID);
 }
 
 
 
 float player_size = 1.0f;
-void addBlock(float c_x, float c_y, float dim_x, float dim_y, int index)
+void addBlock(float c_x, float c_y, float dim_x, float dim_y, int index, int tID)
 {
-	drawWall(c_x,c_y,dim_x,dim_y);
+	drawWall(c_x,c_y,dim_x,dim_y, tID);
 	blocks[index] = Block(CVector3(c_x,c_y,0),CVector3(dim_x,dim_y,0),player_size);
 }
 
@@ -292,34 +354,90 @@ void RenderScene()
 			  g_Camera.m_vUpVector.x, g_Camera.m_vUpVector.y, g_Camera.m_vUpVector.z);
 
 
-	/////////////////////// WALLLLLLLS //////////////////////////////////////////////
-	addBlock(-21,-0.5,42,1,0);
-	addBlock(-8,-10.5,16,1,1);
-	addBlock(-27,-10.5,16,1,2);
-	addBlock(-40,-10.5,4,1,3);
-	addBlock(-19.5,-22.5,17,1,4);
-	addBlock(-32,-22.5,2,1,5);
-	addBlock(-21,-35.5,42,1,6);
-	addBlock(-0.5,-18,1,36,7);
-	addBlock(-9.5,-1,1,2,8);
-	addBlock(-9.5,-8,1,6,9);
-	addBlock(-21.5,-2,1,2,10);
-	addBlock(-21.5,-8,1,4,11);
-	addBlock(-11.5,-12,1,4,12);
-	addBlock(-11.5,-21.5,1,8,13);
-	addBlock(-11.5,-32,1,8,14);
-	addBlock(-24.5,-17,1,12,15);
-	addBlock(-33.5,-8,1,16,16);
-	addBlock(-33.5,-27.5,1,15,17);
-	addBlock(-41.5,-18,1,36,18);
-	blocks_size = 19;
-	
-	//////////////////////// WALLLLS ///////////////////////////////////////////////////
-	for(int i=0;i<blocks_size;i++){
-		if(blocks[i].hasCollision(g_Camera)){
-			g_Camera = checkCollision(g_Camera,blocks[i]);
-		}
-	}
+    /////////////////////// WALLLLLLLS //////////////////////////////////////////////
+    addBlock(-21,-0.5,42,1,0,WALL);
+    addBlock(-8,-10.5,16,1,1,WALL);
+    addBlock(-27,-10.5,16,1,2,WALL);
+    addBlock(-40,-10.5,4,1,3,WALL);
+    addBlock(-19.5,-22.5,17,1,4,WALL);
+    addBlock(-32,-22.5,2,1,5,WALL);
+    addBlock(-21,-35.5,42,1,6,WALL);
+    addBlock(-0.5,-18,1,36,7,WALL);
+    addBlock(-9.5,-1,1,2,8,WALL);
+    addBlock(-9.5,-8,1,6,9,WALL);
+    addBlock(-21.5,-2,1,2,10,WALL);
+    addBlock(-21.5,-8,1,4,11,WALL);
+    addBlock(-11.5,-12,1,4,12,WALL);
+    addBlock(-11.5,-21,1,8,13,WALL);
+    addBlock(-11.5,-32,1,8,14,WALL);
+    addBlock(-24.5,-17,1,12,15,WALL);
+    addBlock(-33.5,-8,1,16,16,WALL);
+    addBlock(-33.5,-27.5,1,17,17,WALL);
+    addBlock(-41.5,-18,1,36,18,WALL);
+    
+    
+    //////////////////////// WALLLLS ///////////////////////////////////////////////////
+
+        ////////////////////// DOORS ////////////////////////
+    if(!isDoorOpened[3]){
+        addBlock(-21.5,-4.5,0.5,3,53,DOOR);
+        if(blocks[53].hasCollision(g_Camera)){
+            g_Camera = checkCollision(g_Camera,blocks[53]);
+        }
+    }
+
+    if(!isDoorOpened[4]){
+        addBlock(-17.5,-10.5,3,0.5,54,DOOR);
+        if(blocks[54].hasCollision(g_Camera)){
+            g_Camera = checkCollision(g_Camera,blocks[54]);
+        }
+    }
+
+    if(!isDoorOpened[5]){
+        addBlock(-11.5,-15.5,0.5,3,55,DOOR);
+        if(blocks[55].hasCollision(g_Camera)){
+            g_Camera = checkCollision(g_Camera,blocks[55]);
+        }
+    }
+
+    if(!isDoorOpened[6]){
+        addBlock(-11.5,-26.5,0.5,3,56,DOOR);
+        if(blocks[56].hasCollision(g_Camera)){
+            g_Camera = checkCollision(g_Camera,blocks[56]);
+        }
+    }
+
+    if(!isDoorOpened[7]){
+        addBlock(-29.5,-22.5,3,0.5,57,DOOR);
+        if(blocks[57].hasCollision(g_Camera)){
+            g_Camera = checkCollision(g_Camera,blocks[57]);
+        }
+    }
+
+    if(!isDoorOpened[8]){
+        addBlock(-33.5,-17.5,0.5,3,58,DOOR);
+        if(blocks[58].hasCollision(g_Camera)){
+            g_Camera = checkCollision(g_Camera,blocks[58]);
+        }
+    }
+
+    if(!isDoorOpened[9]){
+        addBlock(-36.5,-10.5,3,0.5,59,DOOR);
+        if(blocks[59].hasCollision(g_Camera)){
+            g_Camera = checkCollision(g_Camera,blocks[59]);
+        }
+    }
+
+
+    /////////////////////// DOORS ///////////////////
+    blocks_size = 19;
+
+    for(int i=0;i<blocks_size;i++){
+        if(blocks[i].hasCollision(g_Camera)){
+            g_Camera = checkCollision(g_Camera,blocks[i]);
+        }
+    }
+
 
 	//drawWall((-9.0 - 22)/2.0 , -5.5,22-9,11-0);//room 2
 	
@@ -367,30 +485,35 @@ void RenderScene()
 	glEnd();											
 	glPopMatrix();
 	
-	// ROOOOM 2 //
+    // ROOOOM 2 //
 
 
-	drawObject(-13.5,-0.52,1,1,RED_BUTTON);
-	Block buttonBlock = Block(CVector3(-13.5,-0.52,0),CVector3(1,1,0),player_size);
+    drawObject(-13.5,-0.52,1,1,RED_BUTTON);
+    Block buttonBlock = Block(CVector3(-13.5,-0.52,0),CVector3(1,1,0),player_size);
 
-	if (collision_times_with_button < 3 && !flashing){
-		drawWall(-15.5,-5.5,13.0,11);
-	}
+    if (collision_times_with_button < 3 && !flashing){
+        drawWall(-15.5,-5.5,13.0,11, WALL);
+    }
 
-	if (buttonBlock.hasCollision(g_Camera)) {
-		if(!touchingButton){
-			flashing = true;
-			touchingButton = true;
-			collision_times_with_button++;
+    if (buttonBlock.hasCollision(g_Camera)) {
+        if(!touchingButton){
+            flashing = true;
+            touchingButton = true;
+            collision_times_with_button++;
+            if (collision_times_with_button >= 3){
+                isDoorOpened[3] = true;
+                isDoorOpened[4] = true;
+            }
 
-		}
-		else{}
-	}
-	else {
-		if (touchingButton){
-			touchingButton = false;
-		}
-	}
+        }
+
+    }
+    else {
+        if (touchingButton){
+            touchingButton = false;
+        }
+    }
+    
 	
 	//Room 3//
 	sawOffsetY1+=sawSpeed1;
@@ -402,21 +525,69 @@ void RenderScene()
 		sawSpeed2 *= -1;
 	}
 
-	drawObject(-25.5,-5.0+sawOffsetY1,1.,2.0,SAWTRAP);
-	Block saw1 = Block(CVector3(-25.5,-5+sawOffsetY1,0),CVector3(1,2,0),player_size);
-	drawObject(-29.5,-5.0+sawOffsetY2,1.,2.0,SAWTRAP);
-	Block saw2 = Block(CVector3(-29.5,-5+sawOffsetY2,0),CVector3(1,2,0),player_size);
+	drawObject(-25.5,-5.5+sawOffsetY1,1.,2.0,SAWTRAP);
+	Block saw1 = Block(CVector3(-25.5,-5.5+sawOffsetY1,0),CVector3(1,2,0),player_size);
+	drawObject(-29.5,-5.5+sawOffsetY2,1.,2.0,SAWTRAP);
+	Block saw2 = Block(CVector3(-29.5,-5.5+sawOffsetY2,0),CVector3(1,2,0),player_size);
 	
-	if(saw2.hasCollision(g_Camera)||saw1.hasCollision(g_Camera)){
-	//game over, TODO~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	}
+	drawObject(-32.5,-5.51,1,1.0,TREASURE);
+	Block TREASURECASE = Block(CVector3(-32.5,-5.5,0),CVector3(1,1,0),player_size);
 
+	
 	//draw the shaddow
-	//drawWall((-31.5 - 22.5)/2.0 - 0.5, -5.5, 12,10);
+	drawWall((-31.5 - 22.5)/2.0 - 0.5, -5.5, 12,10,WALL);
+
+	    // ROOOOM 4
+
+    
+    drawObject(-19.5,-21,1,2,MINI_SCROLL);
+    Block scroll = Block(CVector3(-19.5,-21,0),CVector3(1,2,0),player_size);
+    bool drawLargeScroll = false;
+    if(scroll.hasCollision(g_Camera)){
+        drawLargeScroll = true;
+    }
+
+
+    // numbers on floor
+    addBlock(-12.7,-13.5,1,1,40,40+roomFourNum[0]);
+    addBlock(-12.7,-15.5,1,1,41,40+roomFourNum[1]);
+    addBlock(-12.7,-17.5,1,1,42,40+roomFourNum[2]);
+
+    for(int i=0;i<3;i++){
+        if(blocks[40+i].hasCollision(g_Camera)){
+            if(!touchingRoomFour[i]){
+                touchingRoomFour[i] = true;
+                roomFourNum[i] = roomFourNum[i]%6 + 1;
+            }
+        }
+        else{
+            touchingRoomFour[i] = false;
+        }
+    }
+
+    if (roomFourNum[0] == 2 && roomFourNum[1] == 3 && roomFourNum[2] == 4){
+        isDoorOpened[5] = true;
+    }
+
+    //drawWall((-11.5-24.5)/2.0,(-22.5 - 10.5)/2.0,13,12);
+    
+    
+    
+    if (drawLargeScroll)
+        drawObject(-19.5,-21,20,20,LARGE_SCROLL);
+
+//   G A M E ~~ O V E R ~~   //
+	if(saw2.hasCollision(g_Camera)||saw1.hasCollision(g_Camera)){
+	isGameOver=true;
+	}
+	
+
 	
 	
 
-
+	if(isGameOver){
+		drawGameOver();
+	}
 	SwapBuffers(g_hDC);
 	assert(glGetError() == GL_NO_ERROR);							
 }

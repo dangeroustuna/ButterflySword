@@ -305,6 +305,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hprev, PSTR cmdline, int ishow
 // Ben Humphrey (DigiBen)
 // Game Programmer
 // DigiBen@GameTutorials.com
-// ©2000-2005 GameTutorials
+// ?000-2005 GameTutorials
 //
 //
